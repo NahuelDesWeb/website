@@ -48,7 +48,7 @@ const DEFS = {
   art: { mapKey: 'art', color: '#ffffff', roughness: 0.85 },
 };
 
-export const MAX_ROOMS = 11;
+export const MAX_ROOMS = 18;
 
 // Every room is a box in world space with its own reveal front (linear or radial).
 // A fragment turns from drawing into material when the front of the room it sits in passes it.

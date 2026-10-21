@@ -2,14 +2,14 @@
 
 Landing con recorrido guiado por el scroll para la ampliación de la vivienda en Bahía Blanca 2559 (CABA), por NRVERTEX.
 
-La página abre sobre la lámina de arquitectura: planta baja y planta alta en tinta sobre papel. La lámina no es una imagen. Es el modelo 3D cortado a +1,20 m y visto desde arriba con una lente muy larga. Al scrollear, los muros suben desde el dibujo, la planta alta se apoya sobre la casa y la cámara baja a la vereda. Después entra por la puerta y recorre los ambientes a la altura de los ojos. Cada ambiente sigue como dibujo de líneas hasta que llega la cámara, y ahí se revelan los materiales reales.
+La página abre sobre la lámina de la planta alta, que es la obra, en tinta sobre papel. La lámina no es una imagen. Es el modelo 3D cortado a +1,20 m y visto desde arriba con una lente muy larga. Al scrollear, los muros suben desde el dibujo, la planta baja existente crece debajo y la cámara baja a la vereda. Después entra por la puerta y recorre los ambientes a la altura de los ojos. Cada ambiente sigue como dibujo de líneas hasta que llega la cámara, y ahí se revelan los materiales reales.
 
 ## Estado
 
-- [x] **Checkpoint 1:** lámina, muros que suben, planta alta que se apoya, vereda y entrada a la sala PB|01.
-- [ ] Escalera y estar-comedor-cocina de la planta alta, con balcón.
-- [ ] Vacío de aire y luz, dormitorio principal y vestidor.
-- [ ] Terraza al atardecer y cierre.
+- [x] Lámina de la planta alta (la obra): sus muros suben desde el dibujo y la planta baja crece debajo hasta +4,44.
+- [x] Vereda, escalera y plataforma elevadora que suben juntas.
+- [x] Recorrido de la planta alta, del frente al fondo: estar-comedor-cocina, balcón, vacío, vestidor, dormitorio PA|01, baño PA|02, dormitorio PA|03 y terraza.
+- [x] Rótulos del plano en cada ambiente y vista aérea final de la obra.
 
 ## Cómo verlo
 
@@ -30,7 +30,8 @@ Abrí `http://localhost:8080/`. Con `?record`, la página expone `window.__seek(
 | `index.html` | Textos del recorrido y carga de three.js, GSAP + ScrollTrigger y Lenis desde CDN |
 | `js/main.js` | Escena, luz de la tarde, cámara y línea de tiempo del scroll |
 | `js/building.js` | El edificio con las medidas del plano aprobado (PB, PA, fachada, sala, calle) |
-| `js/drawing.js` | La lámina: rótulos, cotas, puertas, rayados y carátula |
+| `js/drawing.js` | La lámina de la planta alta: rótulos, cotas, puertas y carátula |
+| `js/labels.js` | Rótulos del plano en el espacio: nombre del ambiente, PA\|xx, medidas y cotas |
 | `js/materials.js` | Materiales que pasan de dibujo (papel, tinta, poché) a PBR con un barrido |
 | `js/builder.js` | Muros con vanos, losas y unión de geometrías |
 | `assets/textures/` | Texturas CC0 de ambientCG |

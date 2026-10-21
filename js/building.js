@@ -49,6 +49,24 @@ export function buildWorld(lib) {
   W.build(pane);
   pa.add(pane);
 
+  // plataforma elevadora: rides from +0.25 to +4.44 next to the stair
+  const lift = new THREE.Group();
+  const Lb = new Builder(lib);
+  Lb.box(0.2, 1.22, -0.08, 0, 6.48, 7.18, 'steel', 'sala');
+  Lb.box(0.22, 1.2, 0, 0.012, 6.5, 7.16, 'oakFurn', 'sala', { cast: false });
+  Lb.box(0.2, 1.22, -0.08, 1.1, 7.18, 7.22, 'steel', 'sala');
+  Lb.box(0.2, 0.24, 0, 1.0, 6.48, 7.18, 'steel', 'sala');
+  Lb.box(0.2, 0.24, 1.0, 1.04, 6.48, 7.18, 'brass', 'sala');
+  Lb.box(0.24, 0.26, 0.15, 1.0, 6.5, 7.16, 'glass', 'sala', { cast: false });
+  Lb.box(0.95, 1.12, 0.95, 1.2, 7.14, 7.18, 'steel', 'sala');
+  Lb.box(0.99, 1.08, 1.05, 1.1, 7.13, 7.14, 'shade', 'sala', { cast: false });
+  Lb.build(lift);
+  const liftLight = new THREE.PointLight('#ffd2a0', 0, 2.6, 2);
+  liftLight.position.set(0.71, 1.9, -6.85);
+  lift.add(liftLight);
+  lift.position.y = 0.25;
+  pb.add(lift);
+
   // practical lights upstairs: dining pendant, living lamp, bedside lamps
   const paLights = [
     [2.05, 1.6, -2.6, 3.5],
@@ -85,7 +103,7 @@ export function buildWorld(lib) {
   lamp.position.set(3.12, 1.6, -4.75);
   pb.add(lamp);
 
-  return { pb, pa, ctx, walk, road, door, lamp, pane, paLights };
+  return { pb, pa, ctx, walk, road, door, lamp, pane, paLights, lift, liftLight };
 }
 
 /* ------------------------------------------------------------------ */
@@ -93,25 +111,18 @@ export function buildWorld(lib) {
 /* ------------------------------------------------------------------ */
 function groundFloor(b) {
   const H = PB_TOP;
-  // lot and party walls
-  b.box(0, LOT_W, -0.16, 0, 0.2, 48.2, 'paper', 'pb', { ...soft, cast: false });
+  // lot under the work (front 23.31 m of the PH) and party walls
+  b.box(0, LOT_W, -0.16, 0, 0.2, 23.31, 'paper', 'pb', { ...soft, cast: false });
   b.box(0, 0.15, 0, H, 0.2, 6.3, 'plaster', 'sala');
-  b.box(0, 0.15, 0, H, 6.3, 23.16, 'paper', 'pb', soft);
-  b.box(0, 0.15, 0, 3.0, 23.16, 25.85, 'paper', 'pb', soft);
-  b.box(0, 0.15, 0, 3.45, 25.85, 34.07, 'paper', 'pb', soft);
-  b.box(0, 0.15, 0, 3.0, 34.07, 48.22, 'paper', 'pb', soft);
-  b.box(8.41, LOT_W, 0, H, 0.2, 23.16, 'paper', 'pb', soft);
-  b.box(8.41, LOT_W, 0, 3.0, 23.16, 25.85, 'paper', 'pb', soft);
-  b.box(8.41, LOT_W, 0, 3.45, 25.85, 34.07, 'paper', 'pb', soft);
-  b.box(8.41, LOT_W, 0, 3.0, 34.07, 47.33, 'paper', 'pb', soft);
-  const back = new THREE.BoxGeometry(Math.hypot(LOT_W, 0.89), 3.0, 0.15);
-  back.rotateY(-Math.atan2(0.89, LOT_W));
-  back.translate(LOT_W / 2, 1.5, -(48.22 + 47.33) / 2 - 0.07);
-  b.geo(back, null, 'paper', 'pb', soft);
+  b.box(0, 0.15, 0, H, 6.3, 23.31, 'paper', 'pb', soft);
+  b.box(8.41, LOT_W, 0, H, 0.2, 23.31, 'paper', 'pb', soft);
+  b.wall('x', 3.59, 5.08, 23.16, 23.31, 0, H, [[3.9, 4.8, 0, 2.1]], 'paper', 'pb', soft);
 
-  // behind the living room: lift, patio under the light well, bathroom PB|02
-  b.box(1.27, 1.37, 0, H, 6.45, 7.6, 'paper', 'pb', soft);
-  b.box(0.15, 1.37, 0, H, 7.6, 7.7, 'paper', 'pb', soft);
+  // behind the living room: lift shaft, patio under the light well, bathroom PB|02
+  b.wall('d', 6.45, 7.6, 1.27, 1.37, 0, H, [[6.6, 7.5, 0.25, 2.35]], 'plaster', 'sala');
+  b.box(0.16, 0.3, 0, PA_LEVEL + 2.6, 7.2, 7.55, 'steel', 'sala');
+  b.box(0.3, 0.34, 0, PA_LEVEL + 2.6, 7.28, 7.47, 'steel', 'sala', { edges: 40 });
+  b.box(0.15, 1.37, 0, H, 7.6, 7.7, 'plaster', 'sala');
   b.wall('x', 0.15, 2.38, 8.15, 8.3, 0, H, [[1.4, 2.1, 0, 2.1]], 'paper', 'pb', soft);
   b.box(2.23, 2.38, 0, H, 8.3, 9.8, 'paper', 'pb', soft);
   b.box(0.15, 3.59, 0, H, 9.8, 9.95, 'paper', 'pb', soft);
@@ -166,27 +177,6 @@ function groundFloor(b) {
     b.box(...xs(0.45, 2.05), 0, 0.5, 20.9, 22.95, 'paper', 'pb', softFurn);
     b.box(...xs(0.15, 3.0), 0, 1.0, 18.3, 18.42, 'paper', 'pb', soft);
   }
-  // patios with 2.00 m walls
-  b.box(3.59, 3.74, 0, 2.0, 23.31, 25.85, 'paper', 'pb', soft);
-  b.box(4.93, 5.08, 0, 2.0, 23.31, 25.85, 'paper', 'pb', soft);
-
-  // rear block (existing, two storeys)
-  const RH = 3.45;
-  b.wall('x', 0.15, 3.43, 25.85, 26.0, 0, RH, [[2.4, 3.2, 0, 2.1], [0.6, 2.0, 1.0, 2.2]], 'paper', 'pb', soft);
-  b.wall('x', 5.13, 8.41, 25.85, 26.0, 0, RH, [[5.36, 6.16, 0, 2.1], [6.6, 8.0, 1.0, 2.2]], 'paper', 'pb', soft);
-  b.box(3.28, 3.43, 0, RH, 26.0, 27.5, 'paper', 'pb', soft);
-  b.box(5.13, 5.28, 0, RH, 26.0, 27.5, 'paper', 'pb', soft);
-  b.box(3.43, 5.13, 0, RH, 27.5, 27.65, 'paper', 'pb', soft);
-  b.box(4.2, 4.36, 0, RH, 27.65, 34.07, 'paper', 'pb', soft);
-  b.wall('x', 0.15, 8.41, 33.92, 34.07, 0, RH, [[1.0, 3.0, 0, 2.2], [5.5, 7.5, 0, 2.2]], 'paper', 'pb', soft);
-  b.box(3.43, 3.58, 0, RH, 27.65, 29.6, 'paper', 'pb', soft);
-  b.box(4.98, 5.13, 0, RH, 27.65, 29.6, 'paper', 'pb', soft);
-  b.box(2.4, 4.2, 0, RH, 31.4, 32.3, 'paper', 'pb', softFurn);
-  b.box(4.36, 6.16, 0, RH, 31.4, 32.3, 'paper', 'pb', softFurn);
-  b.box(0.15, 0.75, 0, 0.9, 28.0, 31.0, 'paper', 'pb', softFurn);
-  b.box(7.81, 8.41, 0, 0.9, 28.0, 31.0, 'paper', 'pb', softFurn);
-  // back patios
-  b.box(4.2, 4.36, 0, 2.0, 34.07, 47.8, 'paper', 'pb', soft);
 }
 
 /* ------------------------------------------------------------------ */
@@ -261,7 +251,11 @@ function livingRoom(b) {
   b.box(0.15, 3.44, 0, 0.25, 0.2, 6.3, 'oak', z, { cast: false });
   b.box(3.44, 3.59, 0, PB_TOP, 0.2, 5.3, 'plaster', z);
   b.box(3.44, 3.59, 0, 3.5, 5.3, 6.3, 'plaster', z);
-  b.wall('x', 0.15, 3.44, 6.3, 6.45, 0, PB_TOP, [[2.3, 3.2, 0, 2.45]], 'plaster', z);
+  b.wall('x', 1.27, 3.44, 6.3, 6.45, 0, PB_TOP, [[2.3, 3.2, 0, 2.45]], 'plaster', z);
+  // glazed lift shaft (plataforma elevadora 1.15 x 1.00 m)
+  b.box(0.15, 1.27, 0.25, PB_TOP, 6.36, 6.38, 'glass', z, { cast: false });
+  for (const x of [0.15, 0.69, 1.21]) b.box(x, x + 0.06, 0.25, PB_TOP, 6.33, 6.41, 'steel', z);
+  for (const y of [0.25, 2.2, PB_TOP - 0.06]) b.box(0.15, 1.27, y, y + 0.06, 6.33, 6.41, 'steel', z);
   b.box(0.15, 3.44, 4.1, 4.13, 0.2, 5.05, 'plaster', z);
   b.box(0.15, 3.44, 0.25, 0.33, 0.2, 0.22, 'oakFurn', z, { edges: false });
 
@@ -374,7 +368,7 @@ function lounge(b, cx, cd, rot, zone = 'sala', base = 0.25) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Planta alta (new, +4.44) and the existing upper rear block           */
+/* Planta alta (new, +4.44)                                            */
 /* ------------------------------------------------------------------ */
 function firstFloor(b) {
   const N = { poche: 'new' };
@@ -419,7 +413,7 @@ function firstFloor(b) {
   b.wall('x', 0.15, 8.41, 0.2, 0.215, 0, 3.0, [[1.47, 3.27, 0, 2.4], [5.07, 6.87, 0, 2.4]], 'plaster', z, N);
   // floor slab (microcement) with the stair opening and the light well
   b.slab(
-    [[0.15, 0.2], [8.41, 0.2], [8.41, 23.16], [0.15, 23.16], [0.15, 6.35], [4.01, 6.35], [4.01, 5.05], [0.15, 5.05]],
+    [[0.15, 0.2], [8.41, 0.2], [8.41, 23.16], [0.15, 23.16], [0.15, 7.6], [1.27, 7.6], [1.27, 6.35], [4.01, 6.35], [4.01, 5.05], [0.15, 5.05]],
     [[2.35, 6.21, 6.5, 10.1]],
     -0.3, 0, 'concrete', z, { poche: 'ink' },
   );
@@ -456,7 +450,11 @@ function firstFloor(b) {
   b.box(0.15, 4.01, 1.0, 1.04, 4.88, 5.07, 'oakFurn', z);
   // lift, dressing room, bedrooms, bathroom
   const H = 3.0;
-  b.box(1.27, 1.37, 0, H, 6.35, 7.6, 'plaster', z, N);
+  b.wall('d', 6.35, 7.6, 1.27, 1.37, 0, H, [[6.5, 7.5, 0, 2.1]], 'plaster', z, N);
+  // lift shaft glass towards the stair opening
+  b.box(0.15, 1.27, 0, 2.2, 6.36, 6.38, 'glass', z, { cast: false });
+  for (const x of [0.15, 1.21]) b.box(x, x + 0.06, 0, 2.2, 6.33, 6.41, 'steel', z);
+  b.box(0.15, 1.27, 2.2, 2.26, 6.33, 6.41, 'steel', z);
   b.box(0.15, 2.2, 0, H, 7.6, 7.75, 'plaster', z, N);
   b.box(2.96, 3.11, 0, H, 11.25, 14.18, 'plaster', z, N);
   b.wall('x', 3.11, 7.41, 11.25, 11.4, 0, H, [[3.5, 4.2, 0, 2.1], [6.5, 7.2, 0, 2.1]], 'plaster', z, N);
@@ -526,13 +524,40 @@ function firstFloor(b) {
     b.cyl(x + 0.21, 13.93, 0.48, 0.78, 0.015, 'brass', z, { ...furn, seg: 10, edges: 40 });
     b.cyl(x + 0.21, 13.93, 0.72, 0.9, 0.11, 'shade', z, { ...furn, open: true, cast: false });
   }
-  // PA|03 dormitorio and PA|02 baño (seen later, drawn for now)
-  b.box(5.3, 6.7, 0, 0.5, 12.1, 14.15, 'linen', z, furn);
+  // PA|03 dormitorio: bed, nightstand with lamp, desk under the light
+  b.box(4.85, 7.15, 0, 0.012, 11.7, 14.0, 'rug', z, { ...furn, cast: false });
+  b.box(5.3, 6.7, 0, 0.3, 12.1, 14.15, 'oakFurn', z, furn);
+  b.box(5.32, 6.68, 0.3, 0.52, 12.15, 14.02, 'linen', z, furn);
+  b.box(5.31, 6.69, 0.52, 0.57, 12.15, 12.75, 'throw', z, furn);
+  b.box(5.4, 5.95, 0.52, 0.66, 13.6, 13.98, 'linen', z, furn);
+  b.box(6.05, 6.6, 0.52, 0.66, 13.6, 13.98, 'linen', z, furn);
   b.box(5.25, 6.75, 0, 0.88, 14.02, 14.17, 'oakFurn', z, furn);
-  b.box(3.11, 4.61, 0, 0.05, 13.4, 14.18, 'concrete', z, furn);
-  b.box(3.11, 4.61, 0.05, 2.1, 13.38, 13.4, 'glass', z, { ...furn, cast: false });
-  b.box(3.7, 4.1, 0, 0.42, 11.55, 12.15, 'ceramic', z, furn);
-  b.box(4.15, 4.61, 0, 0.85, 12.3, 13.1, 'oakFurn', z, furn);
+  b.box(4.8, 5.2, 0, 0.48, 13.72, 14.15, 'oakFurn', z, furn);
+  b.cyl(5.0, 13.93, 0.48, 0.78, 0.015, 'brass', z, { ...furn, seg: 10, edges: 40 });
+  b.cyl(5.0, 13.93, 0.72, 0.9, 0.11, 'shade', z, { ...furn, open: true, cast: false });
+  b.box(4.78, 5.33, 0.72, 0.76, 11.5, 12.6, 'oakFurn', z, furn);
+  b.box(4.82, 4.86, 0, 0.72, 11.55, 12.55, 'steel', z, furn);
+  b.box(5.25, 5.29, 0, 0.72, 11.55, 12.55, 'steel', z, furn);
+  b.box(5.45, 5.85, 0.42, 0.47, 11.85, 12.25, 'leather', z, furn);
+  b.box(5.81, 5.85, 0.47, 0.84, 11.85, 12.25, 'oakFurn', z, furn);
+  b.box(5.45, 5.85, 0, 0.42, 11.85, 11.88, 'steel', z, furn);
+  b.box(5.45, 5.85, 0, 0.42, 12.22, 12.25, 'steel', z, furn);
+  b.cyl(4.98, 11.75, 0.76, 0.92, 0.06, 'ceramic', z, { ...furn, seg: 20 });
+  // PA|02 baño: walk-in shower at the window, floating oak vanity, mirror
+  b.box(3.11, 4.61, 0, 0.03, 13.38, 14.18, 'stone', z, furn);
+  b.box(3.11, 3.95, 0.03, 2.1, 13.36, 13.38, 'glass', z, { ...furn, cast: false });
+  b.box(3.93, 3.96, 0.03, 2.1, 13.34, 13.4, 'steel', z, furn);
+  b.cyl(3.6, 13.95, 2.05, 2.08, 0.13, 'steel', z, { ...furn, seg: 24 });
+  b.box(3.58, 3.62, 2.08, 2.3, 14.05, 14.18, 'steel', z, furn);
+  b.box(3.14, 3.56, 0, 0.42, 12.25, 12.85, 'ceramic', z, furn);
+  b.box(3.11, 3.3, 0.42, 0.9, 12.3, 12.8, 'ceramic', z, furn);
+  b.box(4.13, 4.61, 0.45, 0.82, 12.15, 13.2, 'oakFurn', z, furn);
+  b.box(4.12, 4.61, 0.82, 0.85, 12.12, 13.23, 'stone', z, furn);
+  b.cyl(4.36, 12.68, 0.85, 0.97, 0.19, 'ceramic', z, { ...furn, r2: 0.14, seg: 28 });
+  b.box(4.56, 4.61, 1.1, 1.95, 12.2, 13.15, 'glass', z, { ...furn, cast: false });
+  b.box(4.55, 4.61, 1.95, 1.98, 12.2, 13.15, 'brass', z, furn);
+  b.box(3.11, 3.15, 1.2, 1.24, 13.0, 13.3, 'brass', z, furn);
+  b.box(3.15, 3.2, 0.7, 1.22, 13.02, 13.28, 'throw', z, furn);
 
   // roof terrace 8.29 x 8.83 ("techo frío"), 1.80 m side walls
   b.box(0, 0.15, -0.3, 1.8, 14.33, 23.16, 'plaster', z, N);
@@ -553,23 +578,6 @@ function firstFloor(b) {
   b.box(6.0, 7.6, 0.04, 0.72, 16.45, 16.55, 'steel', z, furn);
   b.box(5.9, 7.7, 0.04, 0.45, 15.45, 15.8, 'oakFurn', z, furn);
   b.box(5.9, 7.7, 0.04, 0.45, 17.2, 17.55, 'oakFurn', z, furn);
-
-  // existing upper rear block (floor at +3.45)
-  const y0 = 3.45 - PA_LEVEL;
-  const y1 = 6.71 - PA_LEVEL;
-  const E = { line: 'soft' };
-  b.wall('x', 0, LOT_W, 25.85, 26.0, y0, y1, [[0.8, 2.6, y0 + 0.9, y0 + 2.2], [5.9, 7.7, y0 + 0.9, y0 + 2.2]], 'paper', z, E);
-  b.wall('x', 0, LOT_W, 33.92, 34.07, y0, y1, [[0.8, 2.6, y0 + 0.9, y0 + 2.2], [5.9, 7.7, y0 + 0.9, y0 + 2.2]], 'paper', z, E);
-  b.box(0, 0.15, y0, y1, 26.0, 33.92, 'paper', z, E);
-  b.box(8.41, LOT_W, y0, y1, 26.0, 33.92, 'paper', z, E);
-  b.box(4.2, 4.36, y0, y1, 26.0, 33.92, 'paper', z, E);
-  b.wall('x', 0.15, 3.64, 29.0, 29.15, y0, y1, [[2.4, 3.2, y0, y0 + 2.1]], 'paper', z, E);
-  b.wall('x', 0.15, 3.64, 30.65, 30.8, y0, y1, [[2.4, 3.2, y0, y0 + 2.1]], 'paper', z, E);
-  b.wall('x', 4.92, 8.41, 29.0, 29.15, y0, y1, [[5.4, 6.2, y0, y0 + 2.1]], 'paper', z, E);
-  b.wall('x', 4.92, 8.41, 30.65, 30.8, y0, y1, [[5.4, 6.2, y0, y0 + 2.1]], 'paper', z, E);
-  b.box(1.65, 1.8, y0, y1, 29.15, 30.65, 'paper', z, E);
-  b.box(6.76, 6.91, y0, y1, 29.15, 30.65, 'paper', z, E);
-  b.box(0.15, 8.41, y1 - 0.15, y1, 26.0, 33.92, 'paper', z, E);
 }
 
 // Leaves as small cards scattered in an ellipsoid: hatching while drawn, foliage once real.
@@ -598,40 +606,6 @@ function foliage(b, [cx, cy, cd], [rx, ry, rz], n, size, zone, seed) {
 /* ------------------------------------------------------------------ */
 function neighbours(b) {
   const o = { line: 'soft', poche: 'paper' };
-  const frame = (x0, x1, y0, y1) => {
-    b.box(x0 - 0.08, x1 + 0.08, y1, y1 + 0.08, -0.05, 0, 'paper', 'ctx', o);
-    b.box(x0 - 0.08, x1 + 0.08, y0 - 0.08, y0, -0.07, 0, 'paper', 'ctx', o);
-    b.box(x0 - 0.08, x0, y0, y1, -0.05, 0, 'paper', 'ctx', o);
-    b.box(x1, x1 + 0.08, y0, y1, -0.05, 0, 'paper', 'ctx', o);
-  };
-  b.box(-9, 0, 0, 7.4, 0, 17, 'paper', 'ctx', o);
-  frame(-7.6, -5.7, 1.1, 2.4);
-  frame(-4.4, -3.2, 0, 2.4);
-  frame(-2.6, -0.7, 1.1, 2.4);
-  frame(-7.6, -0.7, 4.0, 6.3);
-  b.box(-7.9, -0.4, 3.6, 3.72, -1.1, 0, 'paper', 'ctx', o);
-  b.box(-18, -9, 0, 10.4, 0, 22, 'paper', 'ctx', o);
-  for (const y of [1.2, 4.3, 7.4]) for (const x of [-16.8, -13.2]) frame(x, x + 2.4, y, y + 1.9);
-  b.box(LOT_W, 17.2, 0, 4.5, 0, 13, 'paper', 'ctx', o);
-  frame(9.4, 12.2, 0, 2.6);
-  frame(13.2, 16.2, 1.0, 2.4);
-  b.box(17.2, 26, 0, 7.8, 0, 18, 'paper', 'ctx', o);
-  for (const y of [1.0, 4.4]) frame(18.4, 24.8, y, y + 2.1);
-  // the other side of Bahía Blanca, seen from the balcony
-  const across = (x0, x1, h) => {
-    b.box(x0, x1, 0, h, -36, -23.44, 'paper', 'ctx', o);
-    for (let y = 1.0; y + 1.6 < h; y += 3.0) {
-      for (let x = x0 + 0.8; x + 1.6 < x1; x += 2.6) {
-        b.box(x - 0.08, x + 1.68, y - 0.08, y + 1.68, -23.44, -23.39, 'paper', 'ctx', o);
-      }
-    }
-  };
-  across(-22, -13, 9.5);
-  across(-13, -4.5, 6.4);
-  across(-4.5, 4.2, 12.2);
-  across(4.2, 12.6, 7.4);
-  across(12.6, 21, 10.2);
-  across(21, 30, 6.0);
   // street tree on the sidewalk
   b.cyl(7.9, -2.61, 0, 3.4, 0.13, 'branch', 'ctx', { ...o, r2: 0.16, seg: 10, edges: 40 });
   for (const [x, y, d, r, k] of [[8.3, 4.4, -3.0, 1.4, 1], [9.2, 5.0, -3.3, 1.1, 2], [7.9, 5.6, -3.4, 1.0, 3], [8.8, 6.0, -2.8, 0.9, 4]]) {

@@ -40,7 +40,7 @@ html.lenis body {
 
 #track {
   position: relative;
-  height: 2650vh;
+  height: 2850vh;
 }
 
 .brand {
@@ -200,7 +200,7 @@ html.lenis body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   text-align: right;
 }
 

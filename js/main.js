@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { loadTextures, MaterialLib, makeRooms, PAPER } from './materials.js';
 import { buildWorld, PA_LEVEL } from './building.js';
-import { drawSheet, SHEET, PA_SHEET_X } from './drawing.js';
+import { drawSheet, SHEET } from './drawing.js';
+import { roomTag, floorDim, levelMark } from './labels.js';
 
 const RECORD = new URLSearchParams(location.search).has('record');
 const D2R = Math.PI / 180;
-const TOTAL = 246; // timeline length in scroll units
+const TOTAL = 264; // timeline length in scroll units
 if (RECORD) document.documentElement.classList.add('is-recording');
 
 const canvas = document.getElementById('scene');
@@ -38,12 +39,18 @@ const { uniforms: revealUniforms, rooms } = makeRooms([
   { name: 'facade', min: [-0.01, -0.5, -0.2], max: [8.57, 9.0, 1.1], origin: [-0.8, 0, 0], dir: [1, 0, 0], width: 1.6, t: -1 },
   { name: 'sala', min: [0.1, -0.5, -6.38], max: [3.52, 4.135, -0.19], origin: [2.77, 1.25, -0.35], radial: true, width: 0.7, t: -0.2 },
   { name: 'stair', min: [0.1, 0.2, -6.4], max: [4.05, Y + 0.01, -5.0], origin: [2.77, 1.25, -0.35], radial: true, width: 0.7, t: -0.2 },
+  { name: 'shaft', min: [0.1, -0.5, -7.72], max: [2.25, Y + 3.06, -6.3], origin: [2.77, 1.25, -0.35], radial: true, width: 0.7, t: -0.2 },
   { name: 'estar', min: [0.1, Y - 0.31, -6.43], max: [8.47, Y + 3.06, -0.19], origin: [4.2, Y + 1.4, -5.7], radial: true, width: 1.0, t: -0.2 },
-  { name: 'core', min: [0.1, Y - 0.31, -11.33], max: [8.47, Y + 4.3, -6.42], origin: [7.4, Y + 1.5, -6.6], radial: true, width: 1.0, t: -0.2 },
+  { name: 'core', min: [2.12, Y - 0.31, -11.33], max: [8.47, Y + 4.3, -6.42], origin: [7.4, Y + 1.5, -6.6], radial: true, width: 1.0, t: -0.2 },
   { name: 'vacio', min: [2.27, -0.2, -10.18], max: [6.29, Y + 4.3, -6.42], origin: [7.4, Y + 1.5, -6.6], radial: true, width: 1.0, t: -0.2 },
+  { name: 'vestidor', min: [0.1, Y - 0.31, -10.18], max: [2.28, Y + 3.06, -7.68], origin: [2.7, Y + 1.5, -10.75], radial: true, width: 0.8, t: -0.2 },
   { name: 'dorm', min: [0.1, Y - 0.31, -14.26], max: [3.04, Y + 3.06, -10.18], origin: [2.9, Y + 1.5, -10.75], radial: true, width: 1.0, t: -0.2 },
+  { name: 'bano', min: [3.03, Y - 0.31, -14.26], max: [4.69, Y + 3.06, -11.32], origin: [3.85, Y + 1.5, -11.3], radial: true, width: 0.8, t: -0.2 },
+  { name: 'dorm3', min: [4.68, Y - 0.31, -14.26], max: [7.34, Y + 3.06, -11.32], origin: [6.85, Y + 1.5, -11.3], radial: true, width: 0.9, t: -0.2 },
+  { name: 'paso2', min: [7.3, Y - 0.31, -14.26], max: [8.47, Y + 3.06, -11.2], origin: [6.85, Y + 1.5, -11.3], radial: true, width: 0.9, t: -0.2 },
   { name: 'terrace', min: [-0.01, Y - 0.31, -23.4], max: [8.57, Y + 4.3, -14.26], origin: [7.9, Y + 1.5, -14.3], radial: true, width: 1.5, t: -0.2 },
   { name: 'roof', min: [-0.01, Y + 2.9, -14.4], max: [8.57, Y + 4.3, -0.19], origin: [7.9, Y + 1.5, -14.3], radial: true, width: 1.5, t: -0.2 },
+  { name: 'all', min: [-0.05, -0.5, -23.4], max: [8.61, 9.0, 0.05], origin: [4.3, 9.0, -12.0], radial: true, width: 3, t: -0.2 },
 ]);
 
 const sun = new THREE.DirectionalLight('#ffe2c2', 3.3);
@@ -65,9 +72,9 @@ const SUN_COL_B = new THREE.Color('#ffbf80');
 const sunDir = new THREE.Vector3();
 
 const st = {
-  tx: 20, ty: 0, tz: -22, S: 64, fitW: 50, fov: 3, el: 89.9, az: 0,
+  tx: 14, ty: 0, tz: -10.5, S: 41, fitW: 38, fov: 3, el: 89.9, az: 0,
   cut: 1.2, ann: 1, city: 0.0001, street: 8.56 / 48.56, road: 0.0001,
-  paX: PA_SHEET_X, paY: 0.02, door: 0, lamp: 0, pane: 0, dusk: 0,
+  pb: 0, door: 0, lamp: 0, lift: 0, pane: 0, dusk: 0,
   walk: 0, wt: 0, paLamps: 1,
 };
 
@@ -75,43 +82,83 @@ const st = {
 // Hermite curve through them; `stop` frames hold still.
 const E = PA_LEVEL + 1.6;
 const PATH = [
-  { t: 99, p: [3.095, 1.617, -0.794], l: [0.85, 1.85, -5.2], fov: 58, stop: true },
-  { t: 104, p: [1.85, 1.65, -1.9], l: [0.62, 2.7, -4.8], fov: 60 },
-  { t: 109, p: [0.68, 2.5, -3.5], l: [0.66, 3.5, -6.2], fov: 62 },
-  { t: 113, p: [0.66, 3.45, -4.85], l: [2.4, 4.4, -5.95], fov: 62 },
-  { t: 116.5, p: [0.85, 3.98, -5.8], l: [3.6, 5.3, -5.75], fov: 62 },
-  { t: 121, p: [2.55, 5.05, -5.8], l: [5.2, 6.0, -5.2], fov: 62 },
-  { t: 125, p: [4.35, E, -5.72], l: [5.6, 5.9, -3.0], fov: 62 },
-  { t: 131, p: [5.3, E + 0.02, -5.65], l: [3.5, 5.55, -0.6], fov: 60, stop: true },
-  { t: 136, p: [7.65, E, -4.3], l: [6.6, 5.8, -0.5], fov: 60 },
-  { t: 140, p: [7.3, E, -2.1], l: [6.42, 5.7, 1.5], fov: 60 },
-  { t: 143, p: [6.42, E - 0.02, -0.95], l: [6.4, 5.6, 3.0], fov: 60 },
-  { t: 147, p: [6.3, E - 0.04, 0.55], l: [-3.0, 5.7, 5.0], fov: 58, stop: true },
-  { t: 151, p: [6.3, E - 0.04, 0.55], l: [2.0, 5.3, 11.0], fov: 58, stop: true },
-  { t: 155, p: [6.42, E - 0.02, -1.2], l: [7.4, 5.9, -5.0], fov: 60 },
-  { t: 159, p: [7.45, E, -4.2], l: [7.2, 6.0, -8.0], fov: 62 },
-  { t: 163, p: [7.35, E, -7.4], l: [5.0, 6.1, -8.3], fov: 64 },
-  { t: 165.5, p: [6.75, 6.22, -8.3], l: [4.0, 6.3, -8.3], fov: 64 },
-  { t: 167.5, p: [5.85, 6.26, -8.3], l: [3.6, 6.8, -8.4], fov: 66 },
-  { t: 171, p: [4.6, 6.0, -8.0], l: [3.0, 8.0, -9.2], fov: 72, stop: true },
-  { t: 175, p: [4.6, 6.0, -8.0], l: [3.4, 8.7, -7.0], fov: 72, stop: true },
-  { t: 178, p: [5.85, 6.26, -8.3], l: [7.6, 6.2, -8.3], fov: 66 },
-  { t: 180.5, p: [6.9, 6.1, -8.5], l: [7.3, 6.0, -11.0], fov: 62 },
-  { t: 184, p: [7.3, E, -9.9], l: [5.0, 6.0, -10.8], fov: 62 },
-  { t: 188, p: [4.6, E, -10.75], l: [1.5, 5.9, -10.9], fov: 62 },
-  { t: 192, p: [2.85, E - 0.01, -10.8], l: [1.3, 5.4, -13.4], fov: 62 },
-  { t: 196, p: [2.55, E - 0.02, -10.95], l: [0.9, 5.25, -14.0], fov: 62, stop: true },
-  { t: 201, p: [2.6, E - 0.04, -12.4], l: [0.6, 5.4, -8.6], fov: 62, stop: true },
-  { t: 203.5, p: [2.7, E, -11.0], l: [4.0, 6.0, -10.9], fov: 62 },
-  { t: 206, p: [3.4, E, -10.75], l: [6.5, 6.0, -10.9], fov: 62 },
-  { t: 209, p: [7.0, E, -10.8], l: [8.0, 6.0, -13.5], fov: 62 },
-  { t: 213, p: [7.9, E, -12.6], l: [7.9, 6.0, -17.0], fov: 62 },
-  { t: 217, p: [7.88, E, -14.9], l: [6.5, 5.9, -19.0], fov: 62 },
-  { t: 221, p: [6.6, E + 0.01, -18.6], l: [4.2, 6.3, -14.5], fov: 60 },
-  { t: 226, p: [6.8, E + 0.2, -22.2], l: [3.6, 5.6, -14.5], fov: 62, stop: true },
-  { t: 234, p: [4.5, 13, -19], l: [4.3, 5.0, -10], fov: 48 },
-  { t: 240, p: [-6, 19, 9], l: [4.3, 4.0, -9.5], fov: 40 },
-  { t: 246, p: [-12, 24, 22], l: [4.3, 3.5, -10.5], fov: 38, stop: true },
+  { t: 56, p: [1.722, 1.65, 8.536], l: [2.77, 1.56, 0], fov: 50, stop: true },
+  { t: 61, p: [2.77, 1.56, 1.6], l: [2.77, 1.5, -2.5], fov: 56 },
+  { t: 65, p: [2.75, 1.6, -1.0], l: [1.6, 1.9, -5.0], fov: 58 },
+  { t: 69, p: [2.65, 1.62, -2.0], l: [0.75, 2.2, -6.3], fov: 60, stop: true },
+  { t: 75, p: [2.65, 1.62, -2.0], l: [0.8, 2.5, -6.4], fov: 60, stop: true },
+  { t: 78, p: [1.1, 1.7, -2.3], l: [0.66, 2.9, -5.4], fov: 60 },
+  { t: 82, p: [0.68, 2.5, -3.5], l: [0.66, 3.5, -6.2], fov: 62 },
+  { t: 86, p: [0.66, 3.45, -4.85], l: [2.4, 4.4, -5.95], fov: 62 },
+  { t: 89.5, p: [0.85, 3.98, -5.8], l: [3.6, 5.3, -5.75], fov: 62 },
+  { t: 94, p: [2.55, 5.05, -5.8], l: [5.2, 6.0, -5.2], fov: 62 },
+  { t: 98, p: [4.35, E, -5.6], l: [3.0, 5.8, -4.6], fov: 62 },
+  { t: 100.5, p: [3.0, E, -4.45], l: [1.0, 5.5, -6.6], fov: 62 },
+  { t: 103, p: [1.75, E, -4.35], l: [0.7, 5.25, -6.8], fov: 62, stop: true },
+  { t: 106, p: [1.75, E, -4.35], l: [0.9, 5.0, -6.9], fov: 62, stop: true },
+  { t: 110, p: [5.0, E, -5.0], l: [4.0, 5.7, -1.0], fov: 60 },
+  { t: 114, p: [5.3, E + 0.02, -5.65], l: [3.5, 5.55, -0.6], fov: 60, stop: true },
+  { t: 119, p: [5.3, E + 0.02, -5.65], l: [2.4, 5.5, -1.4], fov: 60, stop: true },
+  { t: 123, p: [7.65, E, -4.3], l: [6.6, 5.8, -0.5], fov: 60 },
+  { t: 126, p: [7.3, E, -2.1], l: [6.42, 5.7, 1.5], fov: 60 },
+  { t: 129, p: [6.42, E - 0.02, -0.95], l: [6.4, 5.6, 3.0], fov: 60 },
+  { t: 131, p: [6.3, E - 0.04, 0.5], l: [3.0, 5.6, 0.8], fov: 60 },
+  { t: 133, p: [6.3, E - 0.04, 0.55], l: [0.5, 5.4, 0.45], fov: 60, stop: true },
+  { t: 137, p: [6.3, E - 0.04, 0.55], l: [0.6, 5.6, 0.9], fov: 60, stop: true },
+  { t: 141, p: [6.42, E - 0.02, -1.2], l: [7.4, 5.9, -5.0], fov: 60 },
+  { t: 145, p: [7.45, E, -4.2], l: [7.2, 6.0, -8.0], fov: 62 },
+  { t: 149, p: [7.35, E, -7.4], l: [5.0, 6.1, -8.3], fov: 64 },
+  { t: 151.5, p: [6.75, 6.22, -8.3], l: [4.0, 6.3, -8.3], fov: 64 },
+  { t: 153.5, p: [5.85, 6.26, -8.3], l: [3.6, 6.8, -8.4], fov: 66 },
+  { t: 157, p: [4.6, 6.0, -8.0], l: [3.0, 8.0, -9.2], fov: 72, stop: true },
+  { t: 161, p: [4.6, 6.0, -8.0], l: [3.4, 8.7, -7.0], fov: 72, stop: true },
+  { t: 164, p: [5.85, 6.26, -8.3], l: [7.6, 6.2, -8.3], fov: 66 },
+  { t: 166.5, p: [6.9, 6.1, -8.5], l: [7.3, 6.0, -11.0], fov: 62 },
+  { t: 170, p: [7.3, E, -9.9], l: [5.0, 6.0, -10.8], fov: 62 },
+  { t: 174, p: [4.6, E, -10.75], l: [1.5, 5.9, -10.9], fov: 62 },
+  { t: 177.5, p: [2.75, E, -10.75], l: [1.2, 5.6, -9.0], fov: 62 },
+  { t: 181, p: [1.8, E, -11.35], l: [1.0, 5.4, -8.2], fov: 64, stop: true },
+  { t: 185, p: [1.8, E, -11.35], l: [0.5, 5.6, -8.8], fov: 64, stop: true },
+  { t: 189, p: [2.55, E - 0.02, -10.95], l: [0.9, 5.25, -14.0], fov: 62, stop: true },
+  { t: 193, p: [2.55, E - 0.02, -10.95], l: [1.4, 5.3, -14.1], fov: 62, stop: true },
+  { t: 196, p: [2.85, E, -10.75], l: [4.5, 6.0, -10.8], fov: 62 },
+  { t: 199, p: [3.85, E, -10.75], l: [3.85, 5.6, -13.0], fov: 66 },
+  { t: 202.5, p: [3.85, E, -11.05], l: [3.9, 5.3, -14.0], fov: 70, stop: true },
+  { t: 206, p: [3.85, E, -11.05], l: [3.6, 5.5, -14.0], fov: 70, stop: true },
+  { t: 209, p: [3.85, E, -10.75], l: [6.8, 5.9, -10.8], fov: 64 },
+  { t: 213, p: [6.85, E, -10.75], l: [6.85, 5.6, -13.0], fov: 64 },
+  { t: 216.5, p: [6.95, E, -11.55], l: [5.3, 5.3, -14.0], fov: 66, stop: true },
+  { t: 220, p: [6.95, E, -11.55], l: [5.6, 5.5, -14.1], fov: 66, stop: true },
+  { t: 223, p: [7.0, E, -10.9], l: [8.0, 6.0, -13.5], fov: 62 },
+  { t: 227, p: [7.9, E, -12.6], l: [7.9, 6.0, -17.0], fov: 62 },
+  { t: 231, p: [7.88, E, -14.9], l: [6.5, 5.9, -19.0], fov: 62 },
+  { t: 235, p: [6.6, E + 0.01, -18.6], l: [4.2, 6.3, -14.5], fov: 60 },
+  { t: 240, p: [6.8, E + 0.2, -22.2], l: [3.6, 5.6, -14.5], fov: 62, stop: true },
+  { t: 244, p: [6.8, E + 0.2, -22.2], l: [3.2, 5.9, -14.0], fov: 62, stop: true },
+  { t: 252, p: [4.5, 13, -19], l: [4.3, 5.0, -10], fov: 48 },
+  { t: 258, p: [-6, 19, 9], l: [4.3, 4.0, -9.5], fov: 40 },
+  { t: 264, p: [-8, 17, 15], l: [4.3, 3.5, -10.5], fov: 38, stop: true },
+];
+
+// Plan annotations shown at each stop, facing the camera of that stop.
+const NOTES = [
+  { t: [68, 77], at: [1.35, 2.05, -4.3], tag: { title: 'ESCALERA', lines: ['24 escalones · +0,25 → +4,44', 'Hormigón, baranda h 1,10 m'] }, h: 0.42 },
+  { t: [68, 77], at: [0.7, 1.35, -6.22], tag: { title: 'PLATAFORMA ELEVADORA', lines: ['1,15 × 1,00 m · +0,25 → +4,44'] }, h: 0.32 },
+  { t: [68, 77], at: [2.0, 0.262, -3.2], level: '+0,25' },
+  { t: [101, 107], at: [1.05, 6.2, -6.0], tag: { title: 'LLEGADA +4,44', lines: ['Escalera y plataforma elevadora'] }, h: 0.24 },
+  { t: [101, 107], at: [2.7, 4.452, -4.55], level: '+4,44' },
+  { t: [113, 121], at: [4.8, 6.5, -2.4], tag: { title: 'ESTAR COMEDOR COCINA', tag: 'PA|05', lines: ['46,39 m² · 8,29 × 6,20 m', 'Microcemento, roble y piedra'] }, h: 0.45 },
+  { t: [113, 121], at: [4.28, 4.452, -4.8], dim: [8.26, '8.29'], rotY: Math.PI },
+  { t: [132, 139], at: [3.6, 6.25, 0.85], tag: { title: 'BALCÓN', lines: ['7,85 × 1,00 m sobre Bahía Blanca'] }, h: 0.4 },
+  { t: [156, 163], at: [3.6, 7.25, -8.7], tag: { title: 'VACÍO DE AIRE Y LUZ', lines: ['4,00 × 4,00 m · abierto al cielo'] }, h: 0.36, face: true },
+  { t: [180, 187], at: [1.45, 6.25, -9.6], tag: { title: 'VESTIDOR', tag: 'PA|04', lines: ['2,15 × 2,49 m · 5,35 m²', 'Placares de roble'] }, h: 0.45 },
+  { t: [188, 195], at: [1.55, 6.4, -13.3], tag: { title: 'DORMITORIO', tag: 'PA|01', lines: ['2,81 × 3,94 m · 11,07 m²'] }, h: 0.42 },
+  { t: [188, 195], at: [1.555, 4.452, -11.7], dim: [2.81, '2.81'] },
+  { t: [201, 208], at: [3.86, 6.3, -13.0], tag: { title: 'BAÑO', tag: 'PA|02', lines: ['1,50 × 2,81 m · 4,22 m²'] }, h: 0.32 },
+  { t: [215, 222], at: [5.9, 6.35, -13.1], tag: { title: 'DORMITORIO', tag: 'PA|03', lines: ['2,50 × 2,81 m · 7,03 m²'] }, h: 0.4 },
+  { t: [215, 222], at: [6.01, 4.452, -11.75], dim: [2.5, '2.50'] },
+  { t: [239, 246], at: [5.0, 6.25, -18.8], tag: { title: 'TERRAZA ACCESIBLE', lines: ['8,29 × 8,83 m · +4,40', 'Techo frío, muros de 1,80 m'] }, h: 0.45 },
+  { t: [239, 246], at: [5.4, 4.49, -19.4], level: '+4,40' },
 ];
 
 const tangents = PATH.map((k, i) => {
@@ -152,6 +199,7 @@ let lib;
 let sheet;
 let tl;
 let shadowFrames = 0;
+const notes = [];
 
 async function init() {
   await Promise.all([document.fonts.load('500 40px Jost'), document.fonts.load('600 40px Jost'), document.fonts.load('italic 400 40px Jost')]);
@@ -174,6 +222,18 @@ async function init() {
   sheet.position.set((SHEET.x0 + SHEET.x1) / 2, 0.27, -(SHEET.d0 + SHEET.d1) / 2);
   sheet.renderOrder = 3;
   scene.add(sheet);
+
+  for (const n of NOTES) {
+    const mesh = n.tag ? roomTag(n.tag, n.h) : n.dim ? floorDim(...n.dim) : levelMark(n.level);
+    mesh.position.set(...n.at);
+    if (n.tag) {
+      const stop = PATH.filter((k) => k.stop && k.t >= n.t[0] && k.t <= n.t[1])[0];
+      mesh.lookAt(stop.p[0], n.face ? stop.p[1] : n.at[1], stop.p[2]);
+    } else if (n.rotY) mesh.rotation.y = n.rotY;
+    mesh.visible = false;
+    scene.add(mesh);
+    notes.push({ mesh, t: n.t });
+  }
 
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), lib.surface('paper', 'ctx', 'paper'));
   ground.rotation.x = -Math.PI / 2;
@@ -207,50 +267,50 @@ function buildTimeline() {
   const reveal = (room, pos, to, duration) => t.to(rooms[room], { t: to, duration, ease: 'power1.inOut' }, pos);
   t.set({}, {}, TOTAL);
 
-  // 1 · the walls rise out of the drawing (6 → 30)
-  at(6, { cut: 4.8, duration: 18, ease: 'power1.inOut' });
-  at(24, { cut: 60, duration: 2, ease: 'power1.in' });
+  // 1 · the first-floor walls rise out of the drawing (6 → 26)
+  at(6, { cut: 4.8, duration: 14, ease: 'power1.inOut' });
+  at(20, { cut: 60, duration: 2, ease: 'power1.in' });
   at(7, { ann: 0, duration: 8 });
-  at(8, { fov: 30, S: 52, fitW: 0, el: 46, az: -30, tx: 11.5, ty: 1.5, tz: -19, duration: 22, ease: 'power2.inOut' });
-  at(21, { city: 1, street: 1, duration: 11, ease: 'power2.out' });
+  at(8, { fov: 30, S: 30, fitW: 0, el: 42, az: -32, tx: 4.3, ty: 1.0, tz: -11.6, duration: 18, ease: 'power2.inOut' });
 
-  // 2 · the first floor lifts off the sheet and lands on the house (30 → 44)
-  at(30, { paX: 0, duration: 12, ease: 'power2.inOut' });
-  at(30, { paY: 7.6, duration: 6, ease: 'power2.out' });
-  at(36, { paY: PA_LEVEL, duration: 6, ease: 'power2.in' });
-  at(30, { tx: 4.4, ty: 3.2, tz: -8, S: 30, el: 26, az: -32, fov: 34, duration: 14, ease: 'power2.inOut' });
-  at(38, { road: 1, duration: 8, ease: 'power2.out' });
+  // 2 · the ground floor grows underneath and lifts the work to +4.44 (24 → 40)
+  at(24, { pb: 1, duration: 15, ease: 'power2.inOut' });
+  at(26, { tx: 4.3, ty: 3.2, tz: -10.5, S: 30, el: 22, az: -36, fov: 34, duration: 14, ease: 'power2.inOut' });
+  at(26, { city: 1, street: 1, duration: 12, ease: 'power2.out' });
+  at(30, { road: 1, duration: 10, ease: 'power2.out' });
 
-  // 3 · down to the sidewalk, in front of the door (44 → 62)
-  at(44, { tx: 2.77, ty: 1.56, tz: 0, S: sFor(8.6, 50), fov: 50, el: 0.6, az: -7, duration: 17, ease: 'power2.inOut' });
-  reveal('street', 48, 30, 11);
-  reveal('tree', 48, 30, 11);
-  reveal('facade', 51, 10.4, 11);
+  // 3 · down to the sidewalk, in front of the door (40 → 56)
+  at(40, { tx: 2.77, ty: 1.56, tz: 0, S: sFor(8.6, 50), fov: 50, el: 0.6, az: -7, duration: 15, ease: 'power2.inOut' });
+  reveal('street', 42, 30, 10);
+  reveal('tree', 42, 30, 10);
+  reveal('facade', 45, 10.4, 10);
 
-  // 4 · the door opens, walk in (62 → 82)
-  at(62, { tz: -2.9, ty: 1.52, az: 0, el: 0.4, S: sFor(3.2, 56), fov: 56, duration: 10, ease: 'power1.inOut' });
-  at(63, { door: 1, duration: 7, ease: 'power2.inOut' });
-  at(72, { tx: 2.8, ty: 1.56, tz: -4.3, S: sFor(3.4, 58), fov: 58, duration: 10, ease: 'power1.inOut' });
-  reveal('sala', 71, 9.5, 17);
-  reveal('stair', 71, 9.5, 17);
-  at(79, { lamp: 1, duration: 6 });
+  // 4 · on foot: in through the door, the stair and the lift, up to +4.44 (56 → 107)
+  t.set(st, { walk: 1 }, 56);
+  t.fromTo(st, { wt: 56 }, { wt: TOTAL, duration: TOTAL - 56 }, 56);
+  at(57, { door: 1, duration: 5, ease: 'power2.inOut' });
+  reveal('sala', 60, 9.5, 12);
+  reveal('stair', 60, 9.5, 12);
+  reveal('shaft', 60, 9.5, 12);
+  at(66, { lamp: 1, duration: 6 });
+  at(79, { lift: 1, duration: 21, ease: 'sine.inOut' });
 
-  // 5 · step aside and turn towards the stair (84 → 98)
-  at(84, { tx: 0.85, ty: 1.85, tz: -5.2, S: sFor(4.95, 58), el: -2.7, az: 27, duration: 14, ease: 'power2.inOut' });
-
-  // 6 · on foot from here: up the stair, through the first floor, out to the terrace (99 → 232)
-  t.set(st, { walk: 1 }, 99);
-  t.fromTo(st, { wt: 99 }, { wt: TOTAL, duration: TOTAL - 99 }, 99);
-  at(100, { dusk: 1, duration: 130, ease: 'sine.inOut' });
+  // 5 · every room of the first floor, front to back, then the terrace (100 → 264)
+  at(100, { dusk: 1, duration: 145, ease: 'sine.inOut' });
+  reveal('estar', 94, 12, 14);
+  at(121, { pane: 1, duration: 5, ease: 'power2.inOut' });
+  reveal('core', 143, 11, 10);
+  reveal('vacio', 143, 11, 10);
+  reveal('vestidor', 172, 5, 8);
+  reveal('dorm', 182, 6.5, 8);
+  reveal('bano', 196, 4.5, 8);
+  reveal('dorm3', 210, 5, 8);
+  reveal('paso2', 210, 5, 8);
   // lamps upstairs stay inside: they fade before we step out to the terrace
-  at(213, { paLamps: 0, duration: 5 });
-  reveal('estar', 120, 12, 13);
-  at(136.5, { pane: 1, duration: 5, ease: 'power2.inOut' });
-  reveal('core', 152, 11, 12);
-  reveal('vacio', 152, 11, 12);
-  reveal('dorm', 186, 6.5, 9);
-  reveal('terrace', 212, 16, 12);
-  reveal('roof', 219, 22, 14);
+  at(225, { paLamps: 0, duration: 5 });
+  reveal('terrace', 226, 16, 12);
+  reveal('roof', 233, 22, 14);
+  reveal('all', 240, 26, 16);
   return t;
 }
 
@@ -292,7 +352,16 @@ function update() {
   lib.pocheOn.value = st.cut < 12 ? 1 : 0;
   sheet.material.opacity = st.ann;
   sheet.visible = st.ann > 0.002;
-  world.pa.position.set(st.paX, st.paY, 0);
+  world.pb.scale.y = Math.max(st.pb, 0.0001);
+  world.pb.visible = st.pb > 0.002;
+  world.pa.position.y = 0.02 + st.pb * (PA_LEVEL - 0.02);
+  world.lift.position.y = 0.25 + st.lift * (PA_LEVEL - 0.25);
+  world.walk.visible = st.city > 0.002;
+  for (const n of notes) {
+    const o = Math.min(smooth((st.wt - n.t[0]) / 1.5), smooth((n.t[1] - st.wt) / 1.5)) * (st.walk > 0.5 ? 1 : 0);
+    n.mesh.material.opacity = o;
+    n.mesh.visible = o > 0.002;
+  }
   world.ctx.scale.y = st.city;
   world.ctx.visible = st.city > 0.002;
   world.walk.scale.x = st.street;
@@ -301,6 +370,7 @@ function update() {
   world.door.rotation.y = -1.72 * st.door;
   world.pane.position.x = -0.85 * st.pane;
   world.lamp.intensity = 4 * st.lamp;
+  world.liftLight.intensity = 1.6 * st.lamp;
   for (const l of world.paLights) l.intensity = l.userData.k * st.lamp * st.paLamps * (0.6 + 0.4 * st.dusk);
   world.shade.emissiveIntensity = 1.6 * st.lamp;
 
