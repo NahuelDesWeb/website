@@ -40,7 +40,7 @@ html.lenis body {
 
 #track {
   position: relative;
-  height: 1100vh;
+  height: 2650vh;
 }
 
 .brand {
@@ -186,6 +186,10 @@ html.lenis body {
   display: flex;
   gap: 14px;
   align-items: stretch;
+  padding: 14px 14px 14px 18px;
+  background: var(--card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   pointer-events: none;
 }
 
@@ -196,7 +200,7 @@ html.lenis body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 26px;
+  gap: 16px;
   text-align: right;
 }
 

@@ -24,12 +24,19 @@ const DEFS = {
   oak: { set: 'oak', color: '#f3eee9', tile: 2.0, rot: true, normal: 0.6 },
   oakFurn: { set: 'oak', color: '#c9a888', tile: 1.2, normal: 0.4 },
   doorWood: { set: 'oak', color: '#6c5a4c', tile: 1.4, rot: true, normal: 0.5 },
-  concrete: { set: 'concrete', color: '#e4e0d9', tile: 2.2, normal: 0.6 },
+  concrete: { set: 'concrete', color: '#efebe5', tile: 2.2, normal: 0.6 },
   stone: { set: 'concrete', color: '#ead9bd', tile: 1.1, normal: 0.4, roughness: 0.55 },
-  asphalt: { set: 'asphalt', color: '#cfccc6', tile: 3.5 },
+  asphalt: { set: 'asphalt', color: '#ffffff', tile: 3.5, normal: 0.6 },
   vereda: { set: 'vereda', color: '#ffffff', tile: 0.8, roughness: 0.88, normal: 1.0 },
   fabric: { set: 'fabric', color: '#e9e0d3', tile: 0.55, normal: 0.8 },
   rug: { set: 'fabric', color: '#cdbb9f', tile: 0.3, normal: 1.0 },
+  linen: { set: 'fabric', color: '#f7f4ee', tile: 0.4, normal: 0.6 },
+  throw: { set: 'fabric', color: '#b59c7a', tile: 0.25, normal: 1.0 },
+  sofaPA: { set: 'fabric', color: '#cfc6b8', tile: 0.5, normal: 0.8 },
+  hedge: { set: 'fabric', color: '#6d7d4f', tile: 0.12, normal: 2.0 },
+  leaf: { color: '#6c7a45', roughness: 0.7 },
+  bamboo: { color: '#a8a463', roughness: 0.55 },
+  deck: { set: 'oak', color: '#e2d4c2', tile: 1.6, normal: 0.8 },
   leather: { set: 'leather', color: '#ffffff', tile: 0.6, normal: 0.6, roughness: 0.7 },
   steel: { color: '#1b1b1b', roughness: 0.42, metalness: 0.6 },
   brass: { color: '#b48f58', roughness: 0.3, metalness: 1 },
@@ -41,31 +48,54 @@ const DEFS = {
   art: { mapKey: 'art', color: '#ffffff', roughness: 0.85 },
 };
 
+export const MAX_ROOMS = 11;
+
+// Every room is a box in world space with its own reveal front (linear or radial).
+// A fragment turns from drawing into material when the front of the room it sits in passes it.
 const REVEAL_GLSL = /* glsl */ `
-uniform vec3 uRevO;
-uniform vec3 uRevD;
-uniform float uRevT;
-uniform float uRevW;
-uniform float uRevMode;
-uniform float uRevYMax;
+#define ROOMS ${MAX_ROOMS}
+uniform vec4 uRoomMin[ROOMS];
+uniform vec4 uRoomMax[ROOMS];
+uniform vec4 uRoomO[ROOMS];
+uniform vec3 uRoomD[ROOMS];
 varying vec3 vWPos;
 float revealMask(out float edge) {
-  float s = uRevMode > 0.5 ? length(vWPos - uRevO) : dot(vWPos - uRevO, uRevD);
-  float inY = step(vWPos.y, uRevYMax);
-  edge = (1.0 - smoothstep(0.0, 0.025, abs(s - uRevT))) * inY;
-  return (1.0 - smoothstep(uRevT - uRevW, uRevT, s)) * inY;
+  float m = 0.0;
+  edge = 0.0;
+  for (int i = 0; i < ROOMS; i++) {
+    if (any(lessThan(vWPos, uRoomMin[i].xyz)) || any(greaterThan(vWPos, uRoomMax[i].xyz))) continue;
+    float s = uRoomMin[i].w > 0.5 ? length(vWPos - uRoomO[i].xyz) : dot(vWPos - uRoomO[i].xyz, uRoomD[i]);
+    float t = uRoomMax[i].w;
+    m = max(m, 1.0 - smoothstep(t - uRoomO[i].w, t, s));
+    edge = max(edge, 1.0 - smoothstep(0.0, 0.025, abs(s - t)));
+  }
+  return m;
 }
 `;
 
-export function makeZone(o) {
-  return {
-    uRevO: { value: new THREE.Vector3(...(o.origin ?? [0, 0, 0])) },
-    uRevD: { value: new THREE.Vector3(...(o.dir ?? [1, 0, 0])).normalize() },
-    uRevT: { value: o.t ?? -1e5 },
-    uRevW: { value: o.width ?? 1 },
-    uRevMode: { value: o.radial ? 1 : 0 },
-    uRevYMax: { value: o.yMax ?? 1e4 },
-  };
+// rooms: [{ name, min, max, origin, dir, radial, width, t }]
+// Returns the shared uniforms and, per room, an object whose `t` (front position) can be tweened.
+export function makeRooms(list) {
+  const uniforms = { uRoomMin: { value: [] }, uRoomMax: { value: [] }, uRoomO: { value: [] }, uRoomD: { value: [] } };
+  const rooms = {};
+  for (let i = 0; i < MAX_ROOMS; i++) {
+    const r = list[i];
+    uniforms.uRoomMin.value.push(new THREE.Vector4(...(r?.min ?? [1e5, 1e5, 1e5]), r?.radial ? 1 : 0));
+    uniforms.uRoomMax.value.push(new THREE.Vector4(...(r?.max ?? [-1e5, -1e5, -1e5]), r?.t ?? -1e5));
+    uniforms.uRoomO.value.push(new THREE.Vector4(...(r?.origin ?? [0, 0, 0]), r?.width ?? 1));
+    uniforms.uRoomD.value.push(new THREE.Vector3(...(r?.dir ?? [1, 0, 0])).normalize());
+    if (!r) continue;
+    const v = uniforms.uRoomMax.value[i];
+    rooms[r.name] = {
+      get t() {
+        return v.w;
+      },
+      set t(x) {
+        v.w = x;
+      },
+    };
+  }
+  return { uniforms, rooms };
 }
 
 export async function loadTextures(renderer) {
@@ -103,9 +133,9 @@ export async function loadTextures(renderer) {
 }
 
 export class MaterialLib {
-  constructor(sets, zones) {
+  constructor(sets, revealUniforms) {
     this.sets = sets;
-    this.zones = zones;
+    this.reveal = revealUniforms;
     this.cache = new Map();
     this.lineCache = new Map();
     this.paper = srgb(PAPER);
@@ -114,15 +144,15 @@ export class MaterialLib {
     this.pocheOn = { value: 1 };
   }
 
-  find(def, zone, poche = 'ink') {
-    return this.cache.get(`${def}|${zone}|${poche}`);
+  find(def, poche = 'ink') {
+    return this.cache.get(`${def}|${poche}`);
   }
 
-  surface(defKey, zoneKey, poche = 'ink') {
-    const key = `${defKey}|${zoneKey}|${poche}`;
+  // The zone only tells the builder how a piece is drawn; where it turns real is decided by the rooms.
+  surface(defKey, _zone, poche = 'ink') {
+    const key = `${defKey}|${poche}`;
     if (this.cache.has(key)) return this.cache.get(key);
     const def = DEFS[defKey];
-    const zone = this.zones[zoneKey];
     const set = def.set ? this.sets[def.set] : def.mapKey ? this.sets[def.mapKey] : null;
     const glass = def.glass ?? 0;
     const m = new THREE.MeshStandardMaterial({
@@ -141,13 +171,13 @@ export class MaterialLib {
       polygonOffset: true,
       polygonOffsetFactor: 1,
       polygonOffsetUnits: 1,
-      envMapIntensity: 0.8,
+      envMapIntensity: 0.9,
     });
     if (m.normalMap) m.normalScale.setScalar(def.normal ?? 1);
     const uTex = new THREE.Vector4(def.set ? def.tile : 0, def.rot ? 1 : 0, 0, 0);
     const uniforms = { uTex: { value: uTex }, uPoche: { value: POCHE[poche] }, uPaper: { value: this.paper }, uInk: { value: this.ink }, uGlass: { value: glass > 0 ? 1 : 0 }, uPocheOn: this.pocheOn };
     m.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, zone, uniforms);
+      Object.assign(sh.uniforms, this.reveal, uniforms);
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vWNrm;\nuniform vec4 uTex;')
         .replace(
@@ -207,10 +237,9 @@ export class MaterialLib {
     return m;
   }
 
-  line(zoneKey, kind = 'ink') {
-    const key = `${zoneKey}|${kind}`;
+  line(_zone, kind = 'ink') {
+    const key = kind;
     if (this.lineCache.has(key)) return this.lineCache.get(key);
-    const zone = this.zones[zoneKey];
     const m = new THREE.LineBasicMaterial({
       color: new THREE.Color(kind === 'soft' ? '#8d887e' : INK),
       transparent: true,
@@ -218,7 +247,7 @@ export class MaterialLib {
       depthWrite: false,
     });
     m.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, zone);
+      Object.assign(sh.uniforms, this.reveal);
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;')
         .replace('#include <fog_vertex>', '#include <fog_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
