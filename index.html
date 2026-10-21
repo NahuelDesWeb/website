@@ -1,110 +1,81 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bahía Blanca 2559 — NRVERTEX</title>
+    <meta name="description" content="Ampliación de una vivienda en Bahía Blanca 2559, Buenos Aires. Del plano al espacio, a escala real." />
+    <meta name="theme-color" content="#f2efe7" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+  </head>
+  <body>
+    <canvas id="scene" aria-hidden="true"></canvas>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animatron</title>
-    <link rel="icon" href="img/viendo-una-pelicula.png">
-    <link rel="stylesheet" href="normalize.css">
-    <link rel="stylesheet" href="styles.css">
-  <!--   <style>
-    *{
-        background-color: #0C2934;
-    }
-    article {
-        display: inline-flex;
-        justify-content: flex-start;
-        align-items: space-around;
-
-
-
-
-    }
-
-    article a img {
-        width: 230px;
-        height: 230px;
-        margin: 40px;
-        border: 4px solid #570E0E;
-        border-radius: 10px;
-
-    }
-
-    article a {
-        display: flex;
-        align-items: center;
-    }
-
-    ul {
-        display: flex;
-        justify-content: space-evenly;
-        list-style: none;
-    }
-   .logo{
-        width:auto;
-   }
-        
-    }
-   body h2{
-        background-color: #5E0909;
-        height: 45px;
-        color: coral;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    h1{
-        font-size: 100px;
-        margin: 10px;
-        color: coral;
-    }
-    </style> -->
-</head>
-
-<body>
-    <header>
-       <!--  <img class="lo" width="1333px" src="img/portada.jpg" alt=""> -->
-        <h1> Animatron</h1>
-        <nav>
-            <ul style="">
-                <li><a href="#">Inicio</a></li>
-                <li><a href="#">Aventura</a></li>
-                <li><a href="#">Comedia</a></li>
-                <li><a href="#">Accion</a></li>
-                <li><a href="#">Terror</a></li>
-            </ul>
-        </nav>
+    <header class="brand">
+      <span class="brand__mark">NRVERTEX</span>
+      <span class="brand__meta">Bahía Blanca 2559 · CABA</span>
     </header>
-  
-    <h2 >Estrenos 2021</h2>
 
-    <section class="seccion1">
-        <article>
-            <a target="_black" href="https://pelisplus.me/serie/la-guardia-del-leon/"><img src="img/1.jpg" alt=""></a>
-        </article>
-        <article>
-            <a target="_black" href="https://pelisplus.me/serie/prodigiosa-las-aventuras-de-ladybug/"><img src="img/2.jpg" alt=""></a>
-        </article>
-        <article>
-            <a target="_black" href="https://seriesretro.com/serie/scooby-doo-donde-estas/#.YWymN1XMLIU"><img src="img/3.jpg" alt=""></a>
-        </article>
-        <article>
-            <a target="_black" href="https://cuevana3.so/serie/kipo-y-la-era-de-los-magnimales"><img src="img/4.png" alt=""></a>
-        </article>
-        <article>
-            <a target="_black" href="https://serieslan.com/tom-y-jerry"><img src="img/5.jpg" alt=""></a>
-        </article>
-        <article>
-            <a target="_black" href="https://simpsonizados.online/"><img src="img/6.png" alt=""></a>
-        </article>
-        <article>
-            <a target="_black" href="https://repelisplus.li/serie/82728-1/bluey/"><img src="img/7.jpg" alt=""></a>
-        </article>
-        <article>
-            <a target="_black" href="https://www.youtube.com/watch?v=t5wI2cTfzoM&list=PLP7X5ycpylZgtmaSQgNE33aR146Pu-f1M"><img src="img/8.jpg" alt=""></a>
-        </article>
+    <section class="intro" data-from="-1" data-to="0.075">
+      <p class="kicker">Lámina 01 · Planta baja y planta alta</p>
+      <h1>Bahía Blanca 2559</h1>
+      <p class="lede">Ampliación de una vivienda en PH, Ciudad de Buenos Aires. Un plano que se convierte en casa, ambiente por ambiente.</p>
+      <p class="hint">Scrolleá para levantar el plano</p>
     </section>
-</body>
 
+    <aside class="caption" data-from="0.1" data-to="0.27">
+      <span class="caption__n">01</span>
+      <h2>El plano es el edificio</h2>
+      <p>Corte horizontal a 1,20 m, visto desde arriba. Al bajar, los muros suben desde el dibujo: en negro lo existente, en rojo lo nuevo.</p>
+    </aside>
+    <aside class="caption" data-from="0.31" data-to="0.43">
+      <span class="caption__n">02</span>
+      <h2>Planta alta, +4,44 m</h2>
+      <p>115,58 m² nuevos sobre la casa existente: estar de 46 m² con balcón, un vacío de luz de 4 × 4 m, dos dormitorios y la terraza.</p>
+    </aside>
+    <aside class="caption" data-from="0.5" data-to="0.63">
+      <span class="caption__n">03</span>
+      <h2>Vereda de Bahía Blanca</h2>
+      <p>Frente de 8,56 m entre medianeras. La luz de la tarde entra de lleno por el frente.</p>
+    </aside>
+    <aside class="caption" data-from="0.86" data-to="2">
+      <span class="caption__n">04</span>
+      <h2>Sala de estar <em>PB|01</em></h2>
+      <p>3,29 × 6,20 m y 4,03 m de altura. Una escalera de 24 escalones sube a la planta alta.</p>
+    </aside>
+
+    <nav class="rail" aria-label="Recorrido">
+      <ol>
+        <li data-at="0">Lámina</li>
+        <li data-at="0.08">Muros</li>
+        <li data-at="0.3">Planta alta</li>
+        <li data-at="0.46">Vereda</li>
+        <li data-at="0.72">Sala</li>
+      </ol>
+      <div class="rail__bar"><span></span></div>
+    </nav>
+
+    <div class="loader" role="status">
+      <span class="loader__label">Imprimiendo la lámina</span>
+      <span class="loader__bar"><span></span></span>
+    </div>
+
+    <main id="track" aria-hidden="true"></main>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
 </html>

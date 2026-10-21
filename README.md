@@ -1,1 +1,40 @@
-# website
+# Bahía Blanca 2559 — del plano a la casa
+
+Landing con recorrido guiado por el scroll para la ampliación de la vivienda en Bahía Blanca 2559 (CABA), por NRVERTEX.
+
+La página abre sobre la lámina de arquitectura: planta baja y planta alta en tinta sobre papel. La lámina no es una imagen. Es el modelo 3D cortado a +1,20 m y visto desde arriba con una lente muy larga. Al scrollear, los muros suben desde el dibujo, la planta alta se apoya sobre la casa y la cámara baja a la vereda. Después entra por la puerta y recorre los ambientes a la altura de los ojos. Cada ambiente sigue como dibujo de líneas hasta que llega la cámara, y ahí se revelan los materiales reales.
+
+## Estado
+
+- [x] **Checkpoint 1:** lámina, muros que suben, planta alta que se apoya, vereda y entrada a la sala PB|01.
+- [ ] Escalera y estar-comedor-cocina de la planta alta, con balcón.
+- [ ] Vacío de aire y luz, dormitorio principal y vestidor.
+- [ ] Terraza al atardecer y cierre.
+
+## Cómo verlo
+
+Son archivos estáticos sin build. Hace falta servirlos por HTTP porque usa módulos ES:
+
+```sh
+npx http-server -p 8080 .
+# o
+python3 -m http.server 8080
+```
+
+Abrí `http://localhost:8080/`. Con `?record`, la página expone `window.__seek(p)` para renderizar cualquier punto del recorrido (p de 0 a 1) sin scroll. Así se graba el video de cada checkpoint.
+
+## Estructura
+
+| Archivo | Qué hace |
+| --- | --- |
+| `index.html` | Textos del recorrido y carga de three.js, GSAP + ScrollTrigger y Lenis desde CDN |
+| `js/main.js` | Escena, luz de la tarde, cámara y línea de tiempo del scroll |
+| `js/building.js` | El edificio con las medidas del plano aprobado (PB, PA, fachada, sala, calle) |
+| `js/drawing.js` | La lámina: rótulos, cotas, puertas, rayados y carátula |
+| `js/materials.js` | Materiales que pasan de dibujo (papel, tinta, poché) a PBR con un barrido |
+| `js/builder.js` | Muros con vanos, losas y unión de geometrías |
+| `assets/textures/` | Texturas CC0 de ambientCG |
+
+## Fuente
+
+Plano de permiso de obra PLANO-2026-32354349-GCABA-DGROC (Obra civil, obra menor: modificación y ampliación de obra con demolición parcial; uso 9.2 vivienda colectiva). Todas las medidas salen de ese plano. Lo que el plano no define (mobiliario, materiales y algunas alturas) es una propuesta de diseño.
