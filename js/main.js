@@ -10,7 +10,7 @@ if (RECORD) document.documentElement.classList.add('is-recording');
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(RECORD ? 1 : Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(RECORD ? 1 : Math.min(devicePixelRatio, innerWidth < 760 ? 1.75 : 2));
 renderer.setSize(innerWidth, innerHeight, false);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.18;
@@ -154,12 +154,17 @@ const camTarget = new THREE.Vector3();
 function update() {
   const aspect = innerWidth / innerHeight;
   const S = Math.max(st.S, st.fitW / aspect);
-  const dist = S / (2 * Math.tan((st.fov * D2R) / 2));
+  const tanV = Math.tan((st.fov * D2R) / 2);
+  const dist = S / (2 * tanV);
+  // On narrow (phone) screens keep the same camera path but open the lens,
+  // so the rooms keep most of their width. The sheet already fits the width.
+  const narrow = aspect < 16 / 9 ? Math.sqrt(16 / 9 / aspect) : 1;
+  const widen = 1 + (narrow - 1) * (1 - Math.min(1, st.fitW / 50));
   const el = st.el * D2R;
   const az = st.az * D2R;
   camTarget.set(st.tx, st.ty, st.tz);
   camera.position.set(st.tx + dist * Math.cos(el) * Math.sin(az), st.ty + dist * Math.sin(el), st.tz + dist * Math.cos(el) * Math.cos(az));
-  camera.fov = st.fov;
+  camera.fov = (2 * Math.atan(tanV * widen)) / D2R;
   camera.aspect = aspect;
   camera.near = dist > 400 ? dist - 160 : dist > 7 ? dist * 0.15 : 0.04;
   camera.far = dist + 400;
