@@ -228,9 +228,9 @@ export function drawSheet() {
   const cx = (TX0 + TX1) / 2;
   rect(TX0, TX1, -7.6, 28.6, 0.03);
   const row = (d) => line(TX0, d, TX1, d, 0.02);
-  // studio and address
-  text('NRVERTEX', cx, 26.4, 1.5, { w: 600, ls: 0.32 });
-  text('Arquitectura · Desarrollo · Visualización', cx, 25.0, 0.32, { ls: 0.08, col: GREY });
+  // project and address
+  text('AMPLIACIÓN PLANTA ALTA', cx, 26.4, 1.05, { w: 600, ls: 0.12 });
+  text('Vivienda en PH · Obra nueva a +4,44', cx, 25.0, 0.32, { ls: 0.08, col: GREY });
   row(24.0);
   text('BAHÍA BLANCA 2559', cx, 22.6, 1.05, { w: 600, ls: 0.04 });
   text('CIUDAD AUTÓNOMA DE BUENOS AIRES', cx, 21.4, 0.34, { ls: 0.12 });

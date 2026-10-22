@@ -56,10 +56,26 @@ html.lenis body {
   pointer-events: none;
 }
 
+.brand {
+  align-items: flex-start;
+}
+
+/* watermark: the studio name and its slogan, outside the drawing */
 .brand__mark {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   font-weight: 600;
   letter-spacing: 0.32em;
   font-size: 15px;
+  opacity: 0.62;
+}
+
+.brand__mark small {
+  font-weight: 500;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
 }
 
 .brand__meta {
