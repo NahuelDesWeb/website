@@ -7,7 +7,7 @@ import { roomTag, floorDim, levelMark } from './labels.js';
 
 const RECORD = new URLSearchParams(location.search).has('record');
 const D2R = Math.PI / 180;
-const TOTAL = 264; // timeline length in scroll units
+const TOTAL = 284; // timeline length in scroll units
 if (RECORD) document.documentElement.classList.add('is-recording');
 
 const canvas = document.getElementById('scene');
@@ -50,7 +50,7 @@ const { uniforms: revealUniforms, rooms } = makeRooms([
   { name: 'paso2', min: [7.3, Y - 0.31, -14.26], max: [8.47, Y + 3.06, -11.2], origin: [6.85, Y + 1.5, -11.3], radial: true, width: 0.9, t: -0.2 },
   { name: 'terrace', min: [-0.01, Y - 0.31, -23.4], max: [8.57, Y + 4.3, -14.26], origin: [7.9, Y + 1.5, -14.3], radial: true, width: 1.5, t: -0.2 },
   { name: 'roof', min: [-0.01, Y + 2.9, -14.4], max: [8.57, Y + 4.3, -0.19], origin: [7.9, Y + 1.5, -14.3], radial: true, width: 1.5, t: -0.2 },
-  { name: 'all', min: [-0.05, -0.5, -23.4], max: [8.61, 9.0, 0.05], origin: [4.3, 9.0, -12.0], radial: true, width: 3, t: -0.2 },
+  { name: 'all', min: [-0.05, -0.5, -48.4], max: [8.61, 9.0, 0.05], origin: [4.3, 9.0, -12.0], radial: true, width: 3, t: -0.2 },
 ]);
 
 const sun = new THREE.DirectionalLight('#ffe2c2', 3.3);
@@ -63,13 +63,21 @@ Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 13, bottom: -13, n
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.03;
 scene.add(sun, sunTarget);
-scene.add(new THREE.HemisphereLight('#e3e9f0', '#cbbcaa', 0.72));
+const hemi = new THREE.HemisphereLight('#e3e9f0', '#cbbcaa', 0.72);
+scene.add(hemi);
 // facade faces west: late sun comes from the street and swings north (-x) as the visit goes on
 const SUN_A = new THREE.Vector3(-0.4, 0.36, 1).normalize();
 const SUN_B = new THREE.Vector3(-0.85, 0.36, 0.62).normalize();
 const SUN_COL_A = new THREE.Color('#ffe2c2');
 const SUN_COL_B = new THREE.Color('#ffbf80');
 const sunDir = new THREE.Vector3();
+const SUN_HIGH = new THREE.Vector3(-0.35, 1, 0.25).normalize();
+const UP_PORTRAIT = new THREE.Vector3(0, 0, -1);
+const UP_LANDSCAPE = new THREE.Vector3(-1, 0, 0);
+const planP = new THREE.Vector3();
+const planL = new THREE.Vector3();
+const planUp = new THREE.Vector3();
+let planMix = 0;
 
 const st = {
   tx: 14, ty: 0, tz: -10.5, S: 41, fitW: 38, fov: 3, el: 89.9, az: 0,
@@ -135,17 +143,24 @@ const PATH = [
   { t: 235, p: [6.6, E + 0.01, -18.6], l: [4.2, 6.3, -14.5], fov: 60 },
   { t: 240, p: [6.8, E + 0.2, -22.2], l: [3.6, 5.6, -14.5], fov: 62, stop: true },
   { t: 244, p: [6.8, E + 0.2, -22.2], l: [3.2, 5.9, -14.0], fov: 62, stop: true },
-  { t: 252, p: [4.5, 13, -19], l: [4.3, 5.0, -10], fov: 48 },
-  { t: 258, p: [-6, 19, 9], l: [4.3, 4.0, -9.5], fov: 40 },
-  { t: 264, p: [-8, 17, 15], l: [4.3, 3.5, -10.5], fov: 38, stop: true },
+  // up from the terrace: the rest of the PH, to the end of the lot
+  { t: 248.5, p: [5.6, 9.0, -20.5], l: [4.3, 3.2, -31.0], fov: 56 },
+  { t: 252.5, p: [4.3, 25, -16.5], l: [4.3, 0, -38.0], fov: 52, stop: true },
+  { t: 257.5, p: [4.3, 25, -16.5], l: [4.3, 0, -39.0], fov: 52, stop: true },
+  // the whole ground floor, cut at 2 m like a plan
+  { t: 261, p: [4.3, 36, -9.5], l: [4.3, 0, -25.0], fov: 52 },
+  { t: 264.5, p: [4.3, 58, -5.0], l: [4.3, 0, -22.6], fov: 50, stop: true },
+  { t: 272, p: [4.3, 58, -5.0], l: [4.3, 0, -22.9], fov: 50, stop: true },
+  { t: 278, p: [-11, 27, 9], l: [4.3, 2.5, -19.5], fov: 44 },
+  { t: 284, p: [-15, 24, 15], l: [4.3, 2.5, -20.5], fov: 40, stop: true },
 ];
 
 // Plan annotations shown at each stop, facing the camera of that stop.
 const NOTES = [
   { t: [68, 77], at: [1.35, 2.05, -4.3], tag: { title: 'ESCALERA', lines: ['24 escalones · +0,25 → +4,44', 'Hormigón, baranda h 1,10 m'] }, h: 0.42 },
-  { t: [68, 77], at: [0.7, 1.35, -6.22], tag: { title: 'PLATAFORMA ELEVADORA', lines: ['1,15 × 1,00 m · +0,25 → +4,44'] }, h: 0.32 },
+  { t: [68, 77], at: [0.7, 1.35, -6.22], tag: { title: 'ASCENSOR', lines: ['Plataforma elevadora 1,15 × 1,00 m', '2 paradas · +0,25 y +4,44'] }, h: 0.38 },
   { t: [68, 77], at: [2.0, 0.262, -3.2], level: '+0,25' },
-  { t: [101, 107], at: [1.05, 6.2, -6.0], tag: { title: 'LLEGADA +4,44', lines: ['Escalera y plataforma elevadora'] }, h: 0.24 },
+  { t: [101, 107], at: [1.05, 6.2, -6.0], tag: { title: 'LLEGADA +4,44', lines: ['Escalera y ascensor'] }, h: 0.24 },
   { t: [101, 107], at: [2.7, 4.452, -4.55], level: '+4,44' },
   { t: [113, 121], at: [4.8, 6.5, -2.4], tag: { title: 'ESTAR COMEDOR COCINA', tag: 'PA|05', lines: ['46,39 m² · 8,29 × 6,20 m', 'Microcemento, roble y piedra'] }, h: 0.45 },
   { t: [113, 121], at: [4.28, 4.452, -4.8], dim: [8.26, '8.29'], rotY: Math.PI },
@@ -159,6 +174,17 @@ const NOTES = [
   { t: [215, 222], at: [6.01, 4.452, -11.75], dim: [2.5, '2.50'] },
   { t: [239, 246], at: [5.0, 6.25, -18.8], tag: { title: 'TERRAZA ACCESIBLE', lines: ['8,29 × 8,83 m · +4,40', 'Techo frío, muros de 1,80 m'] }, h: 0.45 },
   { t: [239, 246], at: [5.4, 4.49, -19.4], level: '+4,40' },
+  // ground floor cut at 2 m: every part of the PH, front to back
+  ...[
+    [[1.8, -2.6], 'UF 1 · SALA', 'PB|01', ['Escalera, ascensor', 'y 2 bicicletas']],
+    [[6.8, -3.4], 'UF 2', null, ['Existente']],
+    [[4.3, -8.2], 'PASILLO COMÚN', null, ['1,20 m · patios', 'bajo el vacío']],
+    [[1.9, -16.0], 'UF 3', null, ['Existente']],
+    [[6.7, -16.0], 'UF 4', null, ['Existente']],
+    [[2.2, -24.6], 'AIRE Y LUZ', null, ['4,00 m · patios']],
+    [[6.4, -31.4], 'FONDO', null, ['2 unidades existentes', 'con planta alta']],
+    [[2.2, -41.6], 'PATIOS', null, ['Hasta 48,22 m', 'desde la L.O.']],
+  ].map(([[x, z], title, tag, lines]) => ({ t: [263, 273], at: [x, 1.3, z], tag: { title, tag, lines }, h: 2.8, face: true, bill: true })),
 ];
 
 const tangents = PATH.map((k, i) => {
@@ -199,6 +225,7 @@ let lib;
 let sheet;
 let tl;
 let shadowFrames = 0;
+let wideShadow = false;
 const notes = [];
 
 async function init() {
@@ -232,7 +259,7 @@ async function init() {
     } else if (n.rotY) mesh.rotation.y = n.rotY;
     mesh.visible = false;
     scene.add(mesh);
-    notes.push({ mesh, t: n.t });
+    notes.push({ mesh, t: n.t, bill: !!n.bill });
   }
 
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), lib.surface('paper', 'ctx', 'paper'));
@@ -310,7 +337,13 @@ function buildTimeline() {
   at(225, { paLamps: 0, duration: 5 });
   reveal('terrace', 226, 16, 12);
   reveal('roof', 233, 22, 14);
-  reveal('all', 240, 26, 16);
+  reveal('all', 240, 50, 18);
+
+  // 6 · the rest of the PH and the whole ground floor, cut at 2 m; then the walls rise again (246 → 284)
+  at(258, { cut: 7.5, duration: 0.6, ease: 'power1.in' });
+  at(258.6, { cut: 2.1, duration: 5.6, ease: 'power2.inOut' });
+  at(272.5, { cut: 7.5, duration: 4.5, ease: 'power2.inOut' });
+  at(277, { cut: 60, duration: 1, ease: 'power1.in' });
   return t;
 }
 
@@ -326,11 +359,29 @@ function update() {
   const widen = 1 + (narrow - 1) * (1 - Math.min(1, st.fitW / 50));
   let fov;
   let dist;
+  planMix = 0;
+  camera.up.set(0, 1, 0);
   if (st.walk > 0.5) {
     fov = samplePath(st.wt, walkP, walkL);
     camera.position.copy(walkP);
     camTarget.copy(walkL);
     dist = 0;
+    // the whole ground floor seen from straight above, laid out along the long side of the screen
+    planMix = Math.min(smooth((st.wt - 258.8) / 5.2), smooth((277 - st.wt) / 5));
+    if (planMix > 0) {
+      const tanV = Math.tan(25 * D2R);
+      const portrait = aspect < 1;
+      // portrait: room for the caption below; landscape: room for the rail on the right
+      const h = portrait ? 35 / tanV : 31 / (tanV * aspect);
+      const dc = portrait ? 14.8 : 28.0;
+      planP.set(4.3, h, -dc);
+      planL.set(4.3, 0, -dc - 0.001);
+      camera.position.lerp(planP, planMix);
+      camTarget.lerp(planL, planMix);
+      fov += (50 - fov) * planMix;
+      planUp.set(0, 1, 0).lerp(portrait ? UP_PORTRAIT : UP_LANDSCAPE, planMix).normalize();
+      camera.up.copy(planUp);
+    } else camera.up.set(0, 1, 0);
   } else {
     const S = Math.max(st.S, st.fitW / aspect);
     dist = S / (2 * Math.tan((st.fov * D2R) / 2));
@@ -341,15 +392,16 @@ function update() {
     fov = st.fov;
   }
   const tanV = Math.tan((fov * D2R) / 2);
-  camera.fov = (2 * Math.atan(tanV * widen)) / D2R;
+  camera.fov = (2 * Math.atan(tanV * (1 + (widen - 1) * (1 - planMix)))) / D2R;
   camera.aspect = aspect;
-  camera.near = dist > 400 ? dist - 160 : dist > 7 ? dist * 0.15 : 0.04;
+  camera.near = dist > 400 ? dist - 160 : dist > 7 ? dist * 0.15 : camera.position.y > 9 ? 0.5 : 0.04;
   camera.far = dist + 400;
   camera.lookAt(camTarget);
   camera.updateProjectionMatrix();
 
   cut.constant = st.cut;
   lib.pocheOn.value = st.cut < 12 ? 1 : 0;
+  lib.planOn.value = planMix;
   sheet.material.opacity = st.ann;
   sheet.visible = st.ann > 0.002;
   world.pb.scale.y = Math.max(st.pb, 0.0001);
@@ -361,6 +413,7 @@ function update() {
     const o = Math.min(smooth((st.wt - n.t[0]) / 1.5), smooth((n.t[1] - st.wt) / 1.5)) * (st.walk > 0.5 ? 1 : 0);
     n.mesh.material.opacity = o;
     n.mesh.visible = o > 0.002;
+    if (n.bill && n.mesh.visible) n.mesh.quaternion.copy(camera.quaternion);
   }
   world.ctx.scale.y = st.city;
   world.ctx.visible = st.city > 0.002;
@@ -375,11 +428,22 @@ function update() {
   world.shade.emissiveIntensity = 1.6 * st.lamp;
 
   // the late sun swings and warms while we walk; the shadow box follows the camera
-  sunDir.copy(SUN_A).lerp(SUN_B, st.dusk).normalize();
+  sunDir.copy(SUN_A).lerp(SUN_B, st.dusk).lerp(SUN_HIGH, planMix).normalize();
   sun.color.copy(SUN_COL_A).lerp(SUN_COL_B, st.dusk);
-  sun.intensity = 3.3 - 0.4 * st.dusk;
+  // seen from above as a plan, soft even light: the cut-away slabs would still cast shadows
+  sun.intensity = (3.3 - 0.4 * st.dusk) * (1 - 0.8 * planMix);
+  hemi.intensity = 0.72 + 1.6 * planMix;
   const focusZ = Math.min(-2, Math.max(-20, (camera.position.z + camTarget.z) / 2));
-  sunTarget.position.set(4.3, st.walk > 0.5 ? 4.5 : 1.6, st.walk > 0.5 ? focusZ : -4.2);
+  // high views over the whole lot need a wider shadow box
+  const wide = st.walk > 0.5 && camera.position.y > 9;
+  if (wide !== wideShadow) {
+    wideShadow = wide;
+    const e = wide ? 30 : 13;
+    Object.assign(sun.shadow.camera, { left: -e, right: e, top: e, bottom: -e });
+    sun.shadow.camera.updateProjectionMatrix();
+  }
+  if (wide) sunTarget.position.set(4.3, 2, -24);
+  else sunTarget.position.set(4.3, st.walk > 0.5 ? 4.5 : 1.6, st.walk > 0.5 ? focusZ : -4.2);
   sun.position.copy(sunTarget.position).addScaledVector(sunDir, 40);
 
   const time = tl.time();

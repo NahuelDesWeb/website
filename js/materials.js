@@ -142,6 +142,8 @@ export class MaterialLib {
     this.ink = srgb(INK);
     // poché (the cut) is only shown while the drawing is being cut
     this.pocheOn = { value: 1 };
+    // seen as a plan from above (end of the visit): cut walls in ink and edges drawn again, even where real
+    this.planOn = { value: 0 };
   }
 
   find(def, poche = 'ink') {
@@ -175,7 +177,7 @@ export class MaterialLib {
     });
     if (m.normalMap) m.normalScale.setScalar(def.normal ?? 1);
     const uTex = new THREE.Vector4(def.set ? def.tile : 0, def.rot ? 1 : 0, 0, 0);
-    const uniforms = { uTex: { value: uTex }, uPoche: { value: POCHE[poche] }, uPaper: { value: this.paper }, uInk: { value: this.ink }, uGlass: { value: glass > 0 ? 1 : 0 }, uPocheOn: this.pocheOn };
+    const uniforms = { uTex: { value: uTex }, uPoche: { value: POCHE[poche] }, uPaper: { value: this.paper }, uInk: { value: this.ink }, uGlass: { value: glass > 0 ? 1 : 0 }, uPocheOn: this.pocheOn, uPlanOn: this.planOn };
     m.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, this.reveal, uniforms);
       sh.vertexShader = sh.vertexShader
@@ -211,7 +213,7 @@ export class MaterialLib {
       sh.fragmentShader = sh.fragmentShader
         .replace(
           '#include <common>',
-          `#include <common>\n${REVEAL_GLSL}\nvarying vec3 vWNrm;\nuniform vec3 uPoche;\nuniform vec3 uPaper;\nuniform vec3 uInk;\nuniform float uGlass;\nuniform float uPocheOn;`,
+          `#include <common>\n${REVEAL_GLSL}\nvarying vec3 vWNrm;\nuniform vec3 uPoche;\nuniform vec3 uPaper;\nuniform vec3 uInk;\nuniform float uGlass;\nuniform float uPocheOn;\nuniform float uPlanOn;`,
         )
         .replace(
           '#include <dithering_fragment>',
@@ -227,6 +229,7 @@ export class MaterialLib {
             else if (uGlass > 0.5) alpha = 0.0;
             gl_FragColor.rgb = mix(paper, gl_FragColor.rgb, m);
             gl_FragColor.a = mix(alpha, gl_FragColor.a, m);
+            if (!gl_FrontFacing) gl_FragColor.rgb = mix(gl_FragColor.rgb, uPoche, uPlanOn * uPocheOn);
             gl_FragColor.rgb = mix(gl_FragColor.rgb, uInk, edge * 0.7);
             gl_FragColor.a = max(gl_FragColor.a, edge * 0.7);
           }`,
@@ -247,13 +250,13 @@ export class MaterialLib {
       depthWrite: false,
     });
     m.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, this.reveal);
+      Object.assign(sh.uniforms, this.reveal, { uPlanOn: this.planOn });
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;')
         .replace('#include <fog_vertex>', '#include <fog_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
       sh.fragmentShader = sh.fragmentShader
-        .replace('#include <common>', `#include <common>\n${REVEAL_GLSL}`)
-        .replace('#include <opaque_fragment>', '{ float e; diffuseColor.a *= 1.0 - revealMask(e); }\n#include <opaque_fragment>');
+        .replace('#include <common>', `#include <common>\n${REVEAL_GLSL}\nuniform float uPlanOn;`)
+        .replace('#include <opaque_fragment>', '{ float e; diffuseColor.a *= 1.0 - revealMask(e) * (1.0 - uPlanOn); }\n#include <opaque_fragment>');
     };
     m.customProgramCacheKey = () => 'reveal-line';
     this.lineCache.set(key, m);

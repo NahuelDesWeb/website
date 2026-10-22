@@ -10,6 +10,8 @@ La página abre sobre la lámina de la planta alta, que es la obra, en tinta sob
 - [x] Vereda, escalera y plataforma elevadora que suben juntas.
 - [x] Recorrido de la planta alta, del frente al fondo: estar-comedor-cocina, balcón, vacío, vestidor, dormitorio PA|01, baño PA|02, dormitorio PA|03 y terraza.
 - [x] Rótulos del plano en cada ambiente y vista aérea final de la obra.
+- [x] Ascensor realista (la plataforma elevadora del plano, 1,15 × 1,00 m) con cabina vidriada hacia la sala.
+- [x] Planta baja existente completa hasta el fondo del lote (48,22 m): UF 2, 3 y 4, pasillo común, patios bajo el vacío, aire y luz, las dos unidades del fondo con su planta alta y los patios del fondo. Al final se ve cortada a 2 m, como plano.
 
 ## Cómo verlo
 
@@ -29,7 +31,7 @@ Abrí `http://localhost:8080/`. Con `?record`, la página expone `window.__seek(
 | --- | --- |
 | `index.html` | Textos del recorrido y carga de three.js, GSAP + ScrollTrigger y Lenis desde CDN |
 | `js/main.js` | Escena, luz de la tarde, cámara y línea de tiempo del scroll |
-| `js/building.js` | El edificio con las medidas del plano aprobado (PB, PA, fachada, sala, calle) |
+| `js/building.js` | El edificio con las medidas del plano aprobado: la obra nueva con materiales y el PH existente en blanco |
 | `js/drawing.js` | La lámina de la planta alta: rótulos, cotas, puertas y carátula |
 | `js/labels.js` | Rótulos del plano en el espacio: nombre del ambiente, PA\|xx, medidas y cotas |
 | `js/materials.js` | Materiales que pasan de dibujo (papel, tinta, poché) a PBR con un barrido |
