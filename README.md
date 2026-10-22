@@ -25,6 +25,16 @@ python3 -m http.server 8080
 
 Abrí `http://localhost:8080/`. Con `?record`, la página expone `window.__seek(p)` para renderizar cualquier punto del recorrido (p de 0 a 1) sin scroll. Así se graba el video de cada checkpoint.
 
+## Acceso con contraseña temporal (Netlify)
+
+Publicado en Netlify, el recorrido queda detrás de una página de acceso:
+
+- Cada contraseña sirve para entrar durante 5 minutos desde que se genera.
+- Una vez adentro, la persona tiene 7 minutos para ver el recorrido; después la página se bloquea y hay que pedir otra contraseña.
+- El dueño genera contraseñas en `/admin` con su clave maestra. Cada una sale con un enlace listo para WhatsApp que ya la incluye.
+
+Variables de entorno del sitio en Netlify: `ACCESS_SECRET` (texto largo al azar) y `ADMIN_KEY` (clave maestra del dueño).
+
 ## Estructura
 
 | Archivo | Qué hace |
@@ -37,6 +47,7 @@ Abrí `http://localhost:8080/`. Con `?record`, la página expone `window.__seek(
 | `js/materials.js` | Materiales que pasan de dibujo (papel, tinta, poché) a PBR con un barrido |
 | `js/builder.js` | Muros con vanos, losas y unión de geometrías |
 | `assets/textures/` | Texturas CC0 de ambientCG |
+| `netlify/edge-functions/acceso.js` | Página de acceso, contraseñas temporales y página del dueño (`/admin`) |
 
 ## Fuente
 

@@ -1,0 +1,5 @@
+# Sitio estático sin build. El acceso temporal lo controla la función de borde
+# netlify/edge-functions/acceso.js (necesita ACCESS_SECRET y ADMIN_KEY en el sitio).
+[build]
+  publish = "."
+  edge_functions = "netlify/edge-functions"
