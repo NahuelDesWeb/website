@@ -1,33 +1,42 @@
 @import url('fonts.css');
 :root{
-  --ink:#0D0D0D; --ink2:#141316; --line:#262529; --paper:#F3F3F3;
-  --violet:#B69CFF; --violet-soft:#CDB9FF; --muted:#A9A9B2;
-  --m:80px; /* margen de zona segura */
+  --ink:#0D0D0D; --ink2:#141316; --line:#34333B; --paper:#F3F3F3; --paper-70:#C9C9D1;
+  --violet:#B69CFF; --violet-soft:#CDB9FF; --muted:#C4C4CC;
+  --m:80px;                       /* margen de zona segura */
+  --s1:16px; --s2:28px; --s3:48px; /* escala de espaciado */
+  --lead:56px; --main:96px;        /* tamaños de titular (se redefinen por lámina) */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:1080px;height:1350px;background:var(--ink);overflow:hidden}
 body{position:relative;font-family:'Public Sans',Arial,sans-serif;color:var(--paper);-webkit-font-smoothing:antialiased}
-.glow{position:absolute;inset:0;background:radial-gradient(900px 700px at 85% 8%,rgba(182,156,255,.16),transparent 60%),radial-gradient(800px 600px at 5% 100%,rgba(124,58,237,.14),transparent 60%)}
-/* cabecera */
+.glow{position:absolute;inset:0;background:radial-gradient(900px 700px at 85% 8%,rgba(182,156,255,.18),transparent 60%),radial-gradient(800px 600px at 5% 100%,rgba(124,58,237,.14),transparent 60%)}
+/* cabecera y pie */
 .top{position:absolute;left:var(--m);right:var(--m);top:var(--m);display:flex;justify-content:space-between;align-items:center;height:44px;z-index:5}
-.logo{font:800 34px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.01em;color:#fff}
-.count{font:600 26px/1 'Public Sans',sans-serif;color:var(--muted);letter-spacing:.04em}
-/* pie */
-.foot{position:absolute;left:var(--m);right:var(--m);bottom:var(--m);display:flex;justify-content:space-between;align-items:center;font:600 26px/1 'Public Sans',sans-serif;color:var(--muted);z-index:5}
-.foot b{color:var(--violet);font-weight:600}
+.logo{font:800 36px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.01em;color:#fff}
+.count{font:700 28px/1 'Public Sans',sans-serif;color:var(--muted);letter-spacing:.04em}
+.count b{color:#fff;font-weight:700}
+.foot{position:absolute;left:var(--m);right:var(--m);bottom:var(--m);display:flex;justify-content:space-between;align-items:center;font:600 30px/1 'Public Sans',sans-serif;color:var(--muted);z-index:5}
+.foot .h{color:#fff;font-weight:700}
+.foot b{color:var(--violet);font-weight:700}
 /* ventana */
 .win{position:absolute;left:var(--m);right:var(--m);top:170px;bottom:150px;background:var(--ink2);border:2px solid var(--line);border-radius:28px;display:flex;flex-direction:column;overflow:hidden;z-index:2}
-.chrome{height:68px;flex:none;border-bottom:2px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 32px}
-.chrome i{width:18px;height:18px;border-radius:50%;border:3px solid var(--violet);display:block}
-.chrome .bar{margin-left:18px;flex:1;height:30px;border-radius:15px;background:#1d1c21}
-.body{flex:1;display:flex;flex-direction:column;padding:44px 48px 48px;min-height:0}
-/* titulares */
-.t{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;letter-spacing:-.025em;line-height:1.1;color:#fff}
+.chrome{height:72px;flex:none;border-bottom:2px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 32px}
+.chrome i{width:18px;height:18px;border-radius:50%;background:var(--violet);display:block}
+.chrome i:nth-child(2){opacity:.6}.chrome i:nth-child(3){opacity:.3}
+.chrome .bar{margin-left:18px;flex:1;height:38px;border-radius:19px;background:#1F1E24;display:flex;align-items:center;padding:0 20px;font:600 22px/1 'Public Sans',sans-serif;color:#8F8F99}
+.body{flex:1;display:flex;flex-direction:column;padding:var(--s3) 52px 52px;min-height:0}
+/* titulares: nivel 1 = apoyo, nivel 2 = protagonista */
+.t{font-family:'Plus Jakarta Sans',sans-serif;color:#fff;word-spacing:.05em}
+.lead{font-weight:700;font-size:var(--lead);line-height:1.16;letter-spacing:-.015em;color:var(--paper-70)}
+.main{font-weight:800;font-size:var(--main);line-height:1.16;letter-spacing:-.025em;margin-top:var(--s2)}
 .t em{font-style:italic;font-weight:800;color:var(--violet-soft)}
-.hl{background:var(--violet);color:var(--ink);padding:0 .14em;margin:0 -.02em;border-radius:.16em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.hl{background:var(--violet);color:var(--ink);font-weight:800;padding:0 .16em .04em;margin:0 -.02em;border-radius:.18em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.tail{font:600 38px/1.25 'Public Sans',sans-serif;color:var(--paper-70);margin-top:var(--s2)}
 /* slot de imagen (placeholder hasta tener la imagen real) */
-.slot{position:relative;flex:none;border-radius:20px;overflow:hidden;border:2px dashed rgba(182,156,255,.55);background:repeating-linear-gradient(135deg,#17161b 0 18px,#1b1a20 18px 36px);background-size:cover;background-position:center}
-.slot .tag{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;font:600 24px/1.35 'Public Sans',sans-serif;color:var(--violet);letter-spacing:.02em}
+.slot{position:relative;flex:1;min-height:0;margin-top:var(--s3);border-radius:22px;overflow:hidden;border:2px dashed rgba(182,156,255,.6);background:repeating-linear-gradient(135deg,#17161b 0 18px,#1b1a20 18px 36px);background-size:cover;background-position:center}
+.slot .tag{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;font:700 26px/1.35 'Public Sans',sans-serif;color:var(--violet);letter-spacing:.02em}
 .slot.has-img{border-color:transparent}.slot.has-img .tag{display:none}
-/* botón pastilla */
-.pill{display:inline-block;background:var(--violet);color:var(--ink);font:700 36px/1.25 'Plus Jakarta Sans',sans-serif;padding:26px 44px;border-radius:999px;text-align:center}
+/* botón pastilla con flecha (como el de nrvertex.com) */
+.cta{display:flex;align-items:center;gap:16px}
+.pill{flex:1;background:var(--violet);color:var(--ink);font:800 38px/1.22 'Plus Jakarta Sans',sans-serif;padding:30px 44px;border-radius:999px;text-align:center}
+.arrow{flex:none;width:112px;height:112px;border-radius:50%;background:var(--violet);color:var(--ink);display:flex;align-items:center;justify-content:center;font:800 54px/1 'Plus Jakarta Sans',sans-serif}
