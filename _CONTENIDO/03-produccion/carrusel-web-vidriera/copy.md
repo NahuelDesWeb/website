@@ -31,4 +31,9 @@ Si querés saber cómo se ve tu web desde afuera, escribime "WEB".
 
 ## Ajustes respecto del copy original
 - Ninguno en los textos. Solo se agregó el resaltado de "lo buscan" en la lámina 4 y la cursiva en "vidriera.", "competencia." y "WhatsApp" como recurso tipográfico de marca.
-- Pendiente: usuario de Instagram (no se muestra en las láminas; agregar solo si se quiere).
+- Pie: @nrvertex.
+
+## Versión estados de WhatsApp (1080×1920)
+- Mismos textos y diseño, con 220 px libres arriba y abajo por la interfaz de WhatsApp. Archivos: `html/estado-1..4.html` → `png/estado-1..4.png`.
+- Único cambio de copy: la pastilla de la lámina 4 dice **Escribime "WEB" por WhatsApp y la revisamos juntos** (en vez de "por DM"). Se quitó el "Deslizá →".
+- Pie de todas las piezas: **@nrvertex** (tomado del enlace de Instagram de nrvertex.com).

@@ -26,3 +26,16 @@ Cómo usarlos: generá la imagen afuera y guardala **con este nombre exacto** en
 ### Notas
 - Lámina 3 no necesita prompt: usa la captura real de `https://nrvertex.com` (`assets/nrvertex-hero.png`).
 - Si querés fotos reales de clientes, pedí autorización antes de usarlas.
+
+---
+
+## Versión estados de WhatsApp (1080×1920)
+Los estados usan otros recortes. Podés reusar el mismo prompt de cada lámina pidiendo estos tamaños y guardando con estos nombres:
+
+| Lámina | Archivo en `assets/imagenes/` | Tamaño a generar | Nota |
+|---|---|---|---|
+| 1 | `estado-1.png` | 1648×1200 (≈1.4:1) | Más alta que la del feed: dejá más aire arriba y abajo. |
+| 2 | `estado-2.png` | 1648×1120 (≈1.5:1) | Igual que arriba. |
+| 4 | `estado-4.png` | 1080×1920 (9:16, pantalla completa) | Sujeto en el **40 % superior**; el resto en sombra, porque ahí va la tarjeta de texto. |
+
+Para usarlas en los estados, cambiá el `data-img` de `html/estado-N.html` a `../assets/imagenes/estado-N.png` y corré `node export-estados.js`.

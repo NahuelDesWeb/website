@@ -1,0 +1,15 @@
+/* Versión estados de WhatsApp: 1080x1920. Zonas libres de UI: 220 px arriba y abajo. */
+html,body{height:1920px}
+.top{top:220px}
+.foot{bottom:220px}
+.win{top:310px;bottom:300px}
+body.s1 .t{font-size:92px}
+body.s1 .slot{height:600px!important}
+body.s2 .t{font-size:64px}
+body.s2 .slot{height:560px!important}
+body.s3 .t{font-size:62px}
+body.s3 .lap{width:760px!important}
+body.s4 .win{height:820px!important;bottom:300px}
+body.s4 .t{font-size:96px}
+body.s4 .bg .tag{padding-top:560px}
+body.s4 .hl{white-space:nowrap}
