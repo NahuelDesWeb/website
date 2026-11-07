@@ -1,0 +1,28 @@
+# Prompts de imagen · carrusel "Vidriera vs. local abierto"
+
+Cómo usarlos: generá la imagen afuera y guardala **con este nombre exacto** en `assets/imagenes/`. El HTML la toma solo; después corré `node export.js` para regenerar los PNG.
+
+**Estilo común:** fotografía realista, cinematográfica y sobria; barrio porteño (CABA); luz de noche cálida; sombras profundas casi negras (`#0D0D0D`) y **un único acento violeta suave (`#B69CFF`)** como luz de neón o reflejo. Sin texto legible, sin logos, sin marcas, sin personas reconocibles, sin look de stock. Es la misma línea de la foto del hero de nrvertex.com (interior oscuro, luz cálida, gente real mirando el celular).
+
+---
+
+## Lámina 1 · `assets/imagenes/lamina-1.png`
+**Tamaño:** 1648×840 px (apaisado 2:1; en pantalla se ve a 824×420).
+
+> Fotografía nocturna de la vidriera de un local de barrio en Buenos Aires, tomada de frente y a la altura de los ojos. Adentro, estantes con productos de un negocio de oficio (florería, ferretería o peluquería) iluminados con luz cálida; el local se ve vacío, con el cartel de "abierto" apagado o sin texto. Reflejo suave de luz violeta (#B69CFF) sobre el vidrio. Fondo y vereda en negro profundo (#0D0D0D). Composición horizontal con el sujeto en el centro y aire arriba y abajo. Estética cinematográfica, realista, poco contraste de color, sin texto legible, sin logos.
+
+## Lámina 2 · `assets/imagenes/lamina-2.png`
+**Tamaño:** 1648×780 px (apaisado ~2.1:1; en pantalla se ve a 824×390).
+
+> Primer plano de una persona en la vereda de noche, de espaldas o de perfil sin rostro identificable, mirando un celular. La pantalla emite una luz violeta suave (#B69CFF) sobre sus manos y su campera oscura. Al fondo, desenfocadas, las luces de varios locales de barrio en una calle de CABA, que sugieren "muchas opciones". Sin texto legible en la pantalla. Fondo negro profundo (#0D0D0D), profundidad de campo corta, estilo fotográfico realista y cinematográfico.
+
+## Lámina 4 · `assets/imagenes/lamina-4.png`
+**Tamaño:** 1080×1350 px (vertical 4:5, pantalla completa).
+
+> Fotografía vertical a pantalla completa de la fachada de un negocio de barrio porteño de noche, con la vidriera encendida y cálida. **Todo el sujeto en la mitad superior de la imagen**; la mitad inferior queda en sombra casi negra (#0D0D0D), porque ahí va una tarjeta de texto. Una persona dentro del local, de espaldas o desenfocada, atendiendo con naturalidad. Luz de acento violeta suave (#B69CFF) en el borde del vidrio. Realista, cinematográfica, sin texto legible, sin logos, sin marcas.
+
+---
+
+### Notas
+- Lámina 3 no necesita prompt: usa la captura real de `https://nrvertex.com` (`assets/nrvertex-hero.png`).
+- Si querés fotos reales de clientes, pedí autorización antes de usarlas.
